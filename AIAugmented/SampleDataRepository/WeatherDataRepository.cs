@@ -1,8 +1,28 @@
 namespace SampleDataRepository;
 
+/// <summary>
+/// Describes which capabilities the grid supports: Filter (column names), GridActions, RowActions.
+/// Each property returns an array of capability names.
+/// </summary>
+public record GridCapabilities(
+    IReadOnlyList<string> Filter,
+    IReadOnlyList<string> GridActions,
+    IReadOnlyList<string> RowActions
+);
+
+/// <summary>
+/// A single filter condition, e.g. {"Column":"Date","Operator":"Equal","Value":"2026-03-02"}.
+/// </summary>
+public record FilterColumn(string Column, string Operator, string Value);
+
 public interface IGridDataRepository<T> where T : class
 {
     IReadOnlyList<string> GetColumnNames();
+    GridCapabilities Capabilities { get; }
+    /// <summary>
+    /// Active filter conditions. When not empty, repositories may filter records (e.g. TBBurdenDataRepository).
+    /// </summary>
+    IList<FilterColumn> FilterColumns { get; }
     Task<List<T>> GetDataAsync(int page, int pageSize, int delayMS = 0);
 }
 
@@ -26,7 +46,19 @@ public class WeatherDataRepository : IGridDataRepository<WeatherData>
         "Scorching"
     ];
 
+    private static readonly GridCapabilities WeatherCapabilities = new(
+        Filter: [],
+        GridActions: ["Add"],
+        RowActions: ["Delete"]
+    );
+
+    private readonly List<FilterColumn> _filterColumns = [];
+
     public IReadOnlyList<string> GetColumnNames() => ColumnNames;
+
+    public GridCapabilities Capabilities => WeatherCapabilities;
+
+    public IList<FilterColumn> FilterColumns => _filterColumns;
 
     public async Task<List<WeatherData>> GetDataAsync(int page, int pageSize, int delayMS = 0)
     {

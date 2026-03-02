@@ -39,12 +39,27 @@ public class TBBurdenDataRepository : IGridDataRepository<TBBurdenData>
 
     private readonly Lazy<List<TBBurdenData>> _data;
 
+    private static readonly GridCapabilities TbCapabilities = new(
+        Filter: ColumnNames,
+        GridActions: ["Add"],
+        RowActions: ["Delete", "Edit"]
+    );
+
+    private readonly List<FilterColumn> _filterColumns = [];
+    private static readonly Dictionary<string, PropertyInfo> PropertyMap = typeof(TBBurdenData)
+        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        .ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
+
     public TBBurdenDataRepository()
     {
         _data = new Lazy<List<TBBurdenData>>(LoadCsv);
     }
 
     public IReadOnlyList<string> GetColumnNames() => ColumnNames;
+
+    public GridCapabilities Capabilities => TbCapabilities;
+
+    public IList<FilterColumn> FilterColumns => _filterColumns;
 
     public async Task<List<TBBurdenData>> GetDataAsync(int page, int pageSize, int delayMS = 0)
     {
@@ -56,15 +71,92 @@ public class TBBurdenDataRepository : IGridDataRepository<TBBurdenData>
         if (delayMS > 0)
             await Task.Delay(delayMS);
 
-        var all = _data.Value;
+        var source = _data.Value;
+        if (_filterColumns.Count > 0)
+            source = ApplyFilters(source, _filterColumns).ToList();
+
         var skip = (page - 1) * pageSize;
-        if (skip >= all.Count)
+        if (skip >= source.Count)
             return new List<TBBurdenData>();
 
-        return all
+        return source
             .Skip(skip)
             .Take(pageSize)
             .ToList();
+    }
+
+    private static IEnumerable<TBBurdenData> ApplyFilters(List<TBBurdenData> source, IList<FilterColumn> filterColumns)
+    {
+        foreach (var row in source)
+        {
+            var match = true;
+            foreach (var f in filterColumns)
+            {
+                if (!PropertyMap.TryGetValue(f.Column, out var prop))
+                    continue;
+                var cellValue = prop.GetValue(row);
+                var cellStr = cellValue?.ToString() ?? string.Empty;
+                if (!Matches(cellValue, cellStr, f.Operator, f.Value))
+                {
+                    match = false;
+                    break;
+                }
+            }
+            if (match)
+                yield return row;
+        }
+    }
+
+    private static bool Matches(object? cellValue, string cellStr, string op, string filterValue)
+    {
+        var opUpper = op.Trim().ToUpperInvariant();
+        filterValue = filterValue ?? string.Empty;
+
+        return opUpper switch
+        {
+            "EQUAL" or "EQ" => cellStr.Equals(filterValue, StringComparison.OrdinalIgnoreCase)
+                || TryCompareNumeric(cellValue, filterValue, out var eq) && eq == 0,
+            "NOTEQUAL" or "NE" => !cellStr.Equals(filterValue, StringComparison.OrdinalIgnoreCase)
+                && (!TryCompareNumeric(cellValue, filterValue, out var ne) || ne != 0),
+            "CONTAINS" => cellStr.Contains(filterValue, StringComparison.OrdinalIgnoreCase),
+            "GREATERTHAN" or "GT" => TryCompareNumeric(cellValue, filterValue, out var gt) && gt > 0,
+            "LESSTHAN" or "LT" => TryCompareNumeric(cellValue, filterValue, out var lt) && lt < 0,
+            "GREATERTHANOREQUAL" or "GTE" => TryCompareNumeric(cellValue, filterValue, out var gte) && gte >= 0,
+            "LESSTHANOREQUAL" or "LTE" => TryCompareNumeric(cellValue, filterValue, out var lte) && lte <= 0,
+            _ => cellStr.Equals(filterValue, StringComparison.OrdinalIgnoreCase)
+        };
+    }
+
+    private static bool TryCompareNumeric(object? cellValue, string filterValue, out int comparison)
+    {
+        comparison = 0;
+        if (string.IsNullOrWhiteSpace(filterValue)) return false;
+        var filterVal = filterValue.Trim();
+        if (cellValue is int i)
+        {
+            if (!int.TryParse(filterVal, NumberStyles.Integer, CultureInfo.InvariantCulture, out var f)) return false;
+            comparison = i.CompareTo(f);
+            return true;
+        }
+        if (cellValue is long l)
+        {
+            if (!long.TryParse(filterVal, NumberStyles.Integer, CultureInfo.InvariantCulture, out var f)) return false;
+            comparison = l.CompareTo(f);
+            return true;
+        }
+        if (cellValue is double d)
+        {
+            if (!double.TryParse(filterVal, NumberStyles.Float, CultureInfo.InvariantCulture, out var f)) return false;
+            comparison = d.CompareTo(f);
+            return true;
+        }
+        if (cellValue is double dVal)
+        {
+            if (!double.TryParse(filterVal, NumberStyles.Float, CultureInfo.InvariantCulture, out var f)) return false;
+            comparison = dVal.CompareTo(f);
+            return true;
+        }
+        return false;
     }
 
     private static List<TBBurdenData> LoadCsv()
