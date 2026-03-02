@@ -152,7 +152,9 @@
                     </div>
                 </div>
                 <div class="grid-modal-footer">
-                    <button class="grid-modal-btn grid-modal-btn-save" @onclick="SaveColumns">Save</button>
+                    <button class="grid-modal-btn grid-modal-btn-save"
+                            disabled="@(!_columnCheckboxes.Any(c => c.Checked))"
+                            @onclick="SaveColumns">Save</button>
                 </div>
             </div>
         </div>

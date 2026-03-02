@@ -53,3 +53,8 @@ Checkboxes must be enabled for columns that exits in VisibleColumns property.
 When user clicks on Save button close the modal dialog and populate VisibleColumns property with only checked columns.
 Display only columns which are included in VisibleColumns, hide the rest.
 If VisibleColumns is different from IGridDataRepository.GetColumnNames display Columns icon as pressed.
+
+# Step 6a.
+Do not allow to save VisibleColumns dialog if all columns are unchecked. There should be at least one column left checked.
+# Step 6b.
+I can not click on Save button when no columns selected, which is correct. But the button visually is still appears as clickable.

@@ -307,8 +307,13 @@
     border-color: #1a1a2e;
 }
 
-.grid-modal-btn-save:hover {
+.grid-modal-btn-save:hover:not(:disabled) {
     background: #2d2d4e;
+}
+
+.grid-modal-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
 /* Columns checkbox list inside modal */
