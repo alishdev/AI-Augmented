@@ -41,3 +41,6 @@ When user clicks on Clear button clear all values in textbox elements
 When user clicks on Save button close the modal dialog and populate FilterColumns property in data repository. 
 Refresh the grid on Save.
 Do not use javascript.
+
+# Step 5.
+Change Filter icon to appear as pressed if FilterColumns property is not empty, and unpressed when property is empty.

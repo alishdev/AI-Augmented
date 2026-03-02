@@ -160,6 +160,12 @@
     border-color: #1a1a2e;
 }
 
+.grid-filter-icon.pressed {
+    background: #1a1a2e;
+    color: #fff;
+    border-color: #1a1a2e;
+}
+
 /* Modal backdrop */
 .grid-modal-backdrop {
     position: fixed;
