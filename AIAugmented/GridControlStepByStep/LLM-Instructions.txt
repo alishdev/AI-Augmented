@@ -1,3 +1,4 @@
+## Step 1
 Build a new Blazor control called GridControl.
 This control will be used in other Blazor pages.
 Requirements:
@@ -10,3 +11,10 @@ Requirements:
 
 Build a new page called GridTest. it should have two elements: Header and GridControl.
 Populate GridControl with data from WeatherDataRepository.
+
+## Step 2. Add new data class because GridControl uses WeatherDataRepository by default.
+Create a new class TBBurdenDataRepository which inherits from IGridDataRepository. Read data from TB_Burden_Country.csv file
+
+## Step 2a. Add new page to use another data class for GridControl
+Build a new page called TBGridTest. it should have two elements: Header and GridControl.
+Populate GridControl with data from TBBurdenDataRepository.

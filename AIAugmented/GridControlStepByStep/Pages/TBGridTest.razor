@@ -1,0 +1,10 @@
+@page "/tbgridtest"
+@using SampleDataRepository
+
+@inject IGridDataRepository<TBBurdenData> Repository
+
+<PageTitle>TB Burden Grid</PageTitle>
+
+<h1>TB Burden by Country</h1>
+
+<GridControl T="TBBurdenData" DataRepository="Repository" />
