@@ -47,6 +47,15 @@
 .grid-table tbody tr:hover {
     background: #f0f4ff;
     transition: background 0.15s ease;
+    cursor: pointer;
+}
+
+.grid-table tbody tr.grid-row-selected {
+    background: #d6e4ff;
+}
+
+.grid-table tbody tr.grid-row-selected:hover {
+    background: #c4d8ff;
 }
 
 .grid-empty {

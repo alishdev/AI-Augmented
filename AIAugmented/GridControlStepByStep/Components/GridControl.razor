@@ -62,7 +62,9 @@
                     {
                         @foreach (var row in _data)
                         {
-                            <tr @key="row">
+                            <tr @key="row"
+                                class="@(ReferenceEquals(row, _selectedRow) ? "grid-row-selected" : "")"
+                                @onclick="() => _selectedRow = row">
                                 @foreach (var col in VisibleColumns)
                                 {
                                     <td data-label="@col">@GetCellValue(row, col)</td>
@@ -177,6 +179,7 @@
     private int _currentPage = 1;
     private bool _hasNextPage;
     private bool _isLoading;
+    private T? _selectedRow;
 
     public List<string> VisibleColumns { get; private set; } = [];
 
@@ -217,6 +220,7 @@
     private async Task LoadPageAsync()
     {
         _isLoading = true;
+        _selectedRow = null;
         StateHasChanged();
 
         var results = await DataRepository.GetDataAsync(_currentPage, PageSize);
