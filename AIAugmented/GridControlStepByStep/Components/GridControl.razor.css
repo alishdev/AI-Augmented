@@ -132,8 +132,8 @@
     cursor: not-allowed;
 }
 
-/* Filter icon — next to pagination */
-.grid-filter-icon {
+/* Toolbar icons — filter, columns */
+.grid-toolbar-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -149,18 +149,18 @@
     transition: all 0.15s ease;
 }
 
-.grid-filter-icon svg {
+.grid-toolbar-icon svg {
     width: 16px;
     height: 16px;
 }
 
-.grid-filter-icon:hover {
+.grid-toolbar-icon:hover {
     background: #1a1a2e;
     color: #fff;
     border-color: #1a1a2e;
 }
 
-.grid-filter-icon.pressed {
+.grid-toolbar-icon.pressed {
     background: #1a1a2e;
     color: #fff;
     border-color: #1a1a2e;
@@ -309,6 +309,35 @@
 
 .grid-modal-btn-save:hover {
     background: #2d2d4e;
+}
+
+/* Columns checkbox list inside modal */
+.grid-columns-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.grid-columns-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 4px;
+    font-size: 0.9rem;
+    color: #333;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.grid-columns-item:hover {
+    background: #f5f7ff;
+}
+
+.grid-columns-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #1a1a2e;
+    cursor: pointer;
 }
 
 /* Responsive: stack rows as cards on small screens */

@@ -26,19 +26,26 @@
 
             @if (_filterableColumns is { Count: > 0 })
             {
-                <button class="grid-filter-icon @(DataRepository.FilterColumns.Count > 0 ? "pressed" : "")" @onclick="OpenFilterModal" aria-label="Filter">
+                <button class="grid-toolbar-icon @(DataRepository.FilterColumns.Count > 0 ? "pressed" : "")" @onclick="OpenFilterModal" aria-label="Filter">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
                     </svg>
                 </button>
             }
+
+            <button class="grid-toolbar-icon @(_columnsPressed ? "pressed" : "")" @onclick="OpenColumnsModal" aria-label="Columns">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="18" rx="1" />
+                    <rect x="14" y="3" width="7" height="18" rx="1" />
+                </svg>
+            </button>
         </div>
 
         <div class="grid-table-wrapper">
             <table class="grid-table">
                 <thead>
                     <tr>
-                        @foreach (var col in _columns)
+                        @foreach (var col in VisibleColumns)
                         {
                             <th>@col</th>
                         }
@@ -48,7 +55,7 @@
                     @if (_data.Count == 0)
                     {
                         <tr>
-                            <td colspan="@_columns.Count" class="grid-empty">No data available.</td>
+                            <td colspan="@VisibleColumns.Count" class="grid-empty">No data available.</td>
                         </tr>
                     }
                     else
@@ -56,7 +63,7 @@
                         @foreach (var row in _data)
                         {
                             <tr @key="row">
-                                @foreach (var col in _columns)
+                                @foreach (var col in VisibleColumns)
                                 {
                                     <td data-label="@col">@GetCellValue(row, col)</td>
                                 }
@@ -68,7 +75,7 @@
         </div>
     }
 
-    @if (_showModal && _filterRows is not null)
+    @if (_showFilterModal && _filterRows is not null)
     {
         <div class="grid-modal-backdrop" @onclick="CloseFilterModal">
             <div class="grid-modal" @onclick:stopPropagation="true">
@@ -121,6 +128,35 @@
             </div>
         </div>
     }
+
+    @if (_showColumnsModal && _columnCheckboxes is not null)
+    {
+        <div class="grid-modal-backdrop" @onclick="CloseColumnsModal">
+            <div class="grid-modal" @onclick:stopPropagation="true">
+                <div class="grid-modal-header">
+                    <h3>Columns</h3>
+                    <button class="grid-modal-close" @onclick="CloseColumnsModal" aria-label="Close">&times;</button>
+                </div>
+                <div class="grid-modal-body">
+                    <div class="grid-columns-list">
+                        @for (var i = 0; i < _columnCheckboxes.Length; i++)
+                        {
+                            var index = i;
+                            <label class="grid-columns-item">
+                                <input type="checkbox"
+                                       checked="@_columnCheckboxes[index].Checked"
+                                       @onchange="(e) => OnColumnChecked(e, index)" />
+                                <span>@_columnCheckboxes[index].Name</span>
+                            </label>
+                        }
+                    </div>
+                </div>
+                <div class="grid-modal-footer">
+                    <button class="grid-modal-btn grid-modal-btn-save" @onclick="SaveColumns">Save</button>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 @typeparam T where T : class
@@ -140,8 +176,15 @@
     private bool _hasNextPage;
     private bool _isLoading;
 
-    private bool _showModal;
+    public List<string> VisibleColumns { get; private set; } = [];
+
+    private bool _columnsPressed;
+
+    private bool _showFilterModal;
     private FilterRowModel[]? _filterRows;
+
+    private bool _showColumnsModal;
+    private ColumnCheckbox[]? _columnCheckboxes;
 
     private class FilterRowModel
     {
@@ -150,10 +193,17 @@
         public string Value { get; set; } = string.Empty;
     }
 
+    private class ColumnCheckbox
+    {
+        public string Name { get; set; } = string.Empty;
+        public bool Checked { get; set; }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         _columns = DataRepository.GetColumnNames();
         _filterableColumns = DataRepository.Capabilities.Filter;
+        VisibleColumns = new List<string>(_columns);
         _propertyCache = typeof(T)
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => _columns.Contains(p.Name))
@@ -189,6 +239,8 @@
         }
     }
 
+    // --- Filter modal ---
+
     private void OpenFilterModal()
     {
         if (_filterableColumns is null) return;
@@ -203,10 +255,10 @@
             return new FilterRowModel { Column = col };
         }).ToArray();
 
-        _showModal = true;
+        _showFilterModal = true;
     }
 
-    private void CloseFilterModal() => _showModal = false;
+    private void CloseFilterModal() => _showFilterModal = false;
 
     private void OnOperatorChanged(ChangeEventArgs e, int index)
     {
@@ -239,9 +291,46 @@
             }
         }
 
-        _showModal = false;
+        _showFilterModal = false;
         _currentPage = 1;
         await LoadPageAsync();
+    }
+
+    // --- Columns modal ---
+
+    private void OpenColumnsModal()
+    {
+        if (_columns is null) return;
+
+        var visibleSet = new HashSet<string>(VisibleColumns);
+        _columnCheckboxes = _columns.Select(col =>
+            new ColumnCheckbox { Name = col, Checked = visibleSet.Contains(col) }
+        ).ToArray();
+
+        _showColumnsModal = true;
+    }
+
+    private void CloseColumnsModal() => _showColumnsModal = false;
+
+    private void OnColumnChecked(ChangeEventArgs e, int index)
+    {
+        _columnCheckboxes![index].Checked = e.Value is true;
+    }
+
+    private void SaveColumns()
+    {
+        if (_columnCheckboxes is not null)
+        {
+            VisibleColumns = _columnCheckboxes
+                .Where(c => c.Checked)
+                .Select(c => c.Name)
+                .ToList();
+        }
+
+        _columnsPressed = _columns is not null
+            && VisibleColumns.Count != _columns.Count;
+
+        _showColumnsModal = false;
     }
 
     private string GetCellValue(T row, string columnName)

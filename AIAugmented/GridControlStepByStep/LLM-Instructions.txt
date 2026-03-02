@@ -44,3 +44,12 @@ Do not use javascript.
 
 # Step 5.
 Change Filter icon to appear as pressed if FilterColumns property is not empty, and unpressed when property is empty.
+
+# Step 6.
+Add a new property to GridControl: VisibleColumns. On start it should containn all data repository columns.
+Add new Columns icon next to Filter icon. 
+When user clicks on Columns icon display a modal form which contains a list of columns from data repository with checkboxes.
+Checkboxes must be enabled for columns that exits in VisibleColumns property.
+When user clicks on Save button close the modal dialog and populate VisibleColumns property with only checked columns.
+Display only columns which are included in VisibleColumns, hide the rest.
+If VisibleColumns is different from IGridDataRepository.GetColumnNames display Columns icon as pressed.
