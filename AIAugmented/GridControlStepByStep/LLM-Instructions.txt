@@ -18,3 +18,6 @@ Create a new class TBBurdenDataRepository which inherits from IGridDataRepositor
 ## Step 2a. Add new page to use another data class for GridControl
 Build a new page called TBGridTest. it should have two elements: Header and GridControl.
 Populate GridControl with data from TBBurdenDataRepository.
+
+## Step 3. Move pagination 
+Move pagination to the top left of the control right above the grid. The pagination component must have 3 elements: left arrow icon, page number, right arrow icon.

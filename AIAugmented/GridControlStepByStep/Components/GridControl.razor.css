@@ -82,41 +82,53 @@
     }
 }
 
-/* Pagination */
+/* Pagination — top-left, above the grid */
 .grid-pagination {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 16px;
-    padding: 14px 0;
+    justify-content: flex-start;
+    gap: 6px;
+    padding: 0 0 10px 0;
 }
 
-.grid-page-info {
+.grid-page-number {
+    min-width: 32px;
+    text-align: center;
     font-size: 0.9rem;
-    font-weight: 500;
-    color: #444;
+    font-weight: 600;
+    color: #1a1a2e;
+    line-height: 32px;
+    user-select: none;
 }
 
-.grid-btn {
-    padding: 8px 18px;
+.grid-page-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
     border: 1px solid #ccc;
     border-radius: 6px;
     background: #fff;
     color: #1a1a2e;
-    font-size: 0.85rem;
-    font-weight: 600;
     cursor: pointer;
     transition: all 0.15s ease;
 }
 
-.grid-btn:hover:not(:disabled) {
+.grid-page-arrow svg {
+    width: 16px;
+    height: 16px;
+}
+
+.grid-page-arrow:hover:not(:disabled) {
     background: #1a1a2e;
     color: #fff;
     border-color: #1a1a2e;
 }
 
-.grid-btn:disabled {
-    opacity: 0.4;
+.grid-page-arrow:disabled {
+    opacity: 0.35;
     cursor: not-allowed;
 }
 
