@@ -21,3 +21,23 @@ Populate GridControl with data from TBBurdenDataRepository.
 
 ## Step 3. Move pagination 
 Move pagination to the top left of the control right above the grid. The pagination component must have 3 elements: left arrow icon, page number, right arrow icon.
+
+## Step 4. Add filter
+Initial instructions:
+Add new Filter icon next to pagination. The icon will only be visible if the repository returns Filter capability.
+If Filter capability then when user clicks on Filter icon display a form where users can select columns and conditions to filter by. 
+The form should have 2 buttons: Clear and Save. 
+When user clicks Clear button set FilterColumns property to null. 
+When user clicks on Save button set FilterColumns property to selected filters.
+
+Updated instructions:
+Add new Filter icon next to pagination. The icon will only be visible if the repository returns Filter capability.
+If Filter capability then when user clicks on Filter icon display a modal form which contains a list of records with 3 elements:
+1. column name 
+2. dropdown with all possible conditions 
+3. textbox where users can enter values.
+The form should have 2 buttons: Clear and Save. 
+When user clicks on Clear button clear all values in textbox elements
+When user clicks on Save button close the modal dialog and populate FilterColumns property in data repository. 
+Refresh the grid on Save.
+Do not use javascript.

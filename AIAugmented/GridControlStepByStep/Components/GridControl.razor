@@ -23,6 +23,15 @@
                     <polyline points="9 6 15 12 9 18" />
                 </svg>
             </button>
+
+            @if (_filterableColumns is { Count: > 0 })
+            {
+                <button class="grid-filter-icon" @onclick="OpenFilterModal" aria-label="Filter">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                    </svg>
+                </button>
+            }
         </div>
 
         <div class="grid-table-wrapper">
@@ -58,6 +67,60 @@
             </table>
         </div>
     }
+
+    @if (_showModal && _filterRows is not null)
+    {
+        <div class="grid-modal-backdrop" @onclick="CloseFilterModal">
+            <div class="grid-modal" @onclick:stopPropagation="true">
+                <div class="grid-modal-header">
+                    <h3>Filter</h3>
+                    <button class="grid-modal-close" @onclick="CloseFilterModal" aria-label="Close">&times;</button>
+                </div>
+                <div class="grid-modal-body">
+                    <table class="grid-filter-table">
+                        <thead>
+                            <tr>
+                                <th>Column</th>
+                                <th>Condition</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (var i = 0; i < _filterRows.Length; i++)
+                            {
+                                var index = i;
+                                <tr>
+                                    <td class="grid-filter-col-name">@_filterRows[index].Column</td>
+                                    <td>
+                                        <select class="grid-filter-select"
+                                                value="@_filterRows[index].Operator"
+                                                @onchange="(e) => OnOperatorChanged(e, index)">
+                                            <option value="Equal">Equal</option>
+                                            <option value="NotEqual">Not Equal</option>
+                                            <option value="Contains">Contains</option>
+                                            <option value="GreaterThan">Greater Than</option>
+                                            <option value="LessThan">Less Than</option>
+                                            <option value="GreaterThanOrEqual">&ge; (GTE)</option>
+                                            <option value="LessThanOrEqual">&le; (LTE)</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input class="grid-filter-input" type="text"
+                                               value="@_filterRows[index].Value"
+                                               @onchange="(e) => OnValueChanged(e, index)" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="grid-modal-footer">
+                    <button class="grid-modal-btn grid-modal-btn-clear" @onclick="ClearFilterValues">Clear</button>
+                    <button class="grid-modal-btn grid-modal-btn-save" @onclick="SaveFiltersAsync">Save</button>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 @typeparam T where T : class
@@ -70,15 +133,27 @@
     public int PageSize { get; set; } = 10;
 
     private IReadOnlyList<string>? _columns;
+    private IReadOnlyList<string>? _filterableColumns;
     private List<T>? _data;
     private Dictionary<string, PropertyInfo>? _propertyCache;
     private int _currentPage = 1;
     private bool _hasNextPage;
     private bool _isLoading;
 
+    private bool _showModal;
+    private FilterRowModel[]? _filterRows;
+
+    private class FilterRowModel
+    {
+        public string Column { get; set; } = string.Empty;
+        public string Operator { get; set; } = "Equal";
+        public string Value { get; set; } = string.Empty;
+    }
+
     protected override async Task OnInitializedAsync()
     {
         _columns = DataRepository.GetColumnNames();
+        _filterableColumns = DataRepository.Capabilities.Filter;
         _propertyCache = typeof(T)
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => _columns.Contains(p.Name))
@@ -112,6 +187,61 @@
             _currentPage--;
             await LoadPageAsync();
         }
+    }
+
+    private void OpenFilterModal()
+    {
+        if (_filterableColumns is null) return;
+
+        var existing = DataRepository.FilterColumns
+            .ToDictionary(f => f.Column, f => f);
+
+        _filterRows = _filterableColumns.Select(col =>
+        {
+            if (existing.TryGetValue(col, out var fc))
+                return new FilterRowModel { Column = col, Operator = fc.Operator, Value = fc.Value };
+            return new FilterRowModel { Column = col };
+        }).ToArray();
+
+        _showModal = true;
+    }
+
+    private void CloseFilterModal() => _showModal = false;
+
+    private void OnOperatorChanged(ChangeEventArgs e, int index)
+    {
+        _filterRows![index].Operator = e.Value?.ToString() ?? "Equal";
+    }
+
+    private void OnValueChanged(ChangeEventArgs e, int index)
+    {
+        _filterRows![index].Value = e.Value?.ToString() ?? string.Empty;
+    }
+
+    private void ClearFilterValues()
+    {
+        if (_filterRows is null) return;
+        foreach (var row in _filterRows)
+        {
+            row.Value = string.Empty;
+        }
+    }
+
+    private async Task SaveFiltersAsync()
+    {
+        DataRepository.FilterColumns.Clear();
+        if (_filterRows is not null)
+        {
+            foreach (var row in _filterRows)
+            {
+                if (!string.IsNullOrWhiteSpace(row.Value))
+                    DataRepository.FilterColumns.Add(new FilterColumn(row.Column, row.Operator, row.Value));
+            }
+        }
+
+        _showModal = false;
+        _currentPage = 1;
+        await LoadPageAsync();
     }
 
     private string GetCellValue(T row, string columnName)
