@@ -1,0 +1,12 @@
+Build a new Blazor control called GridControl.
+This control will be used in other Blazor pages.
+Requirements:
+1. GridControl will be used to show data in a table view
+2. GridControl should NOT USE javascript
+3. GridControl must be fast
+4. All CSS must be stored in GridControl.css
+5. GridControl must use responsive UI design
+6. GridControl constructor must include the following parameters: instance of IGridDataRepository.
+
+Build a new page called GridTest. it should have two elements: Header and GridControl.
+Populate GridControl with data from WeatherDataRepository.

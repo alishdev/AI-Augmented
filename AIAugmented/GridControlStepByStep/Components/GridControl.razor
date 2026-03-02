@@ -1,0 +1,124 @@
+@using SampleDataRepository
+@using System.Reflection
+
+<div class="grid-control">
+    @if (_isLoading && _data is null)
+    {
+        <div class="grid-loading">
+            <span class="grid-spinner"></span>
+            <span>Loading&hellip;</span>
+        </div>
+    }
+    else if (_columns is not null && _data is not null)
+    {
+        <div class="grid-table-wrapper">
+            <table class="grid-table">
+                <thead>
+                    <tr>
+                        @foreach (var col in _columns)
+                        {
+                            <th>@col</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (_data.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="@_columns.Count" class="grid-empty">No data available.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var row in _data)
+                        {
+                            <tr @key="row">
+                                @foreach (var col in _columns)
+                                {
+                                    <td data-label="@col">@GetCellValue(row, col)</td>
+                                }
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="grid-pagination">
+            <button class="grid-btn" disabled="@(_currentPage <= 1 || _isLoading)" @onclick="PreviousPageAsync">
+                &laquo; Prev
+            </button>
+            <span class="grid-page-info">Page @_currentPage</span>
+            <button class="grid-btn" disabled="@(!_hasNextPage || _isLoading)" @onclick="NextPageAsync">
+                Next &raquo;
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public IGridDataRepository DataRepository { get; set; } = default!;
+
+    [Parameter]
+    public int PageSize { get; set; } = 10;
+
+    private IReadOnlyList<string>? _columns;
+    private List<WeatherData>? _data;
+    private Dictionary<string, PropertyInfo>? _propertyCache;
+    private int _currentPage = 1;
+    private bool _hasNextPage;
+    private bool _isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _columns = DataRepository.GetColumnNames();
+        _propertyCache = typeof(WeatherData)
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => _columns.Contains(p.Name))
+            .ToDictionary(p => p.Name);
+
+        await LoadPageAsync();
+    }
+
+    private async Task LoadPageAsync()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        var results = await DataRepository.GetWeatherDataAsync(_currentPage, PageSize);
+        _data = results;
+        _hasNextPage = results.Count == PageSize;
+
+        _isLoading = false;
+    }
+
+    private async Task NextPageAsync()
+    {
+        _currentPage++;
+        await LoadPageAsync();
+    }
+
+    private async Task PreviousPageAsync()
+    {
+        if (_currentPage > 1)
+        {
+            _currentPage--;
+            await LoadPageAsync();
+        }
+    }
+
+    private string GetCellValue(WeatherData row, string columnName)
+    {
+        if (_propertyCache is null || !_propertyCache.TryGetValue(columnName, out var prop))
+            return string.Empty;
+
+        var value = prop.GetValue(row);
+        return value switch
+        {
+            DateTime dt => dt.ToShortDateString(),
+            null => string.Empty,
+            _ => value.ToString() ?? string.Empty
+        };
+    }
+}

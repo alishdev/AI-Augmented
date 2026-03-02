@@ -1,8 +1,16 @@
 namespace SampleDataRepository;
 
-public class WeatherDataRepository
+public interface IGridDataRepository
+{
+    IReadOnlyList<string> GetColumnNames();
+    Task<List<WeatherData>> GetWeatherDataAsync(int page, int pageSize, int delayMS = 0);
+}
+
+public class WeatherDataRepository : IGridDataRepository
 {
     const int TotalRecords = 23;
+
+    static readonly string[] ColumnNames = [nameof(WeatherData.Date), nameof(WeatherData.Temperature), nameof(WeatherData.Summary)];
 
     static readonly string[] SummaryChoices =
     [
@@ -18,7 +26,9 @@ public class WeatherDataRepository
         "Scorching"
     ];
 
-    public static async Task<List<WeatherData>> GetWeatherDataAsync(int page, int pageSize, int delayMS = 0)
+    public IReadOnlyList<string> GetColumnNames() => ColumnNames;
+
+    public async Task<List<WeatherData>> GetWeatherDataAsync(int page, int pageSize, int delayMS = 0)
     {
         if (page < 1)
             throw new ArgumentException("Page must be greater than 0");

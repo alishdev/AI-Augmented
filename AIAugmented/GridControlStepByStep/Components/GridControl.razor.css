@@ -1,0 +1,175 @@
+.grid-control {
+    width: 100%;
+    font-family: inherit;
+}
+
+/* Table wrapper for horizontal scroll on overflow */
+.grid-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.grid-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.grid-table thead tr {
+    background: #1a1a2e;
+    color: #fff;
+}
+
+.grid-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.grid-table td {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #eaeaea;
+    color: #333;
+}
+
+.grid-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.grid-table tbody tr:hover {
+    background: #f0f4ff;
+    transition: background 0.15s ease;
+}
+
+.grid-empty {
+    text-align: center;
+    padding: 32px 16px !important;
+    color: #888;
+    font-style: italic;
+}
+
+/* Loading */
+.grid-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 48px 16px;
+    color: #555;
+    font-size: 1rem;
+}
+
+.grid-spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid #ddd;
+    border-top-color: #1a1a2e;
+    border-radius: 50%;
+    animation: grid-spin 0.7s linear infinite;
+}
+
+@keyframes grid-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Pagination */
+.grid-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 14px 0;
+}
+
+.grid-page-info {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #444;
+}
+
+.grid-btn {
+    padding: 8px 18px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+    color: #1a1a2e;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.grid-btn:hover:not(:disabled) {
+    background: #1a1a2e;
+    color: #fff;
+    border-color: #1a1a2e;
+}
+
+.grid-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Responsive: stack rows as cards on small screens */
+@media screen and (max-width: 640px) {
+    .grid-table thead {
+        display: none;
+    }
+
+    .grid-table,
+    .grid-table tbody,
+    .grid-table tr,
+    .grid-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .grid-table tr {
+        margin-bottom: 12px;
+        border-radius: 8px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+
+    .grid-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 14px;
+        border-bottom: 1px solid #f0f0f0;
+        text-align: right;
+    }
+
+    .grid-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        color: #888;
+        text-align: left;
+        flex-shrink: 0;
+        margin-right: 12px;
+    }
+
+    .grid-table td:last-child {
+        border-bottom: none;
+    }
+
+    .grid-empty {
+        text-align: center !important;
+    }
+
+    .grid-empty::before {
+        display: none;
+    }
+}

@@ -1,0 +1,10 @@
+@page "/gridtest"
+@using SampleDataRepository
+
+@inject IGridDataRepository Repository
+
+<PageTitle>Grid Test</PageTitle>
+
+<h1>Weather Grid</h1>
+
+<GridControl DataRepository="Repository" />
