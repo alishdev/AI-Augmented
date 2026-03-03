@@ -1,0 +1,129 @@
+# Requirements
+In GridControlOneShot project:
+Build a new Blazor control called GridControl.
+This control will be used in other Blazor pages.
+Requirements:
+1. GridControl will be used to show data in a table view
+2. GridControl should NOT USE javascript
+3. GridControl must be fast
+4. All CSS must be stored in GridControl.css
+5. GridControl must use responsive UI design
+6. GridControl constructor must include the following parameters: instance of IGridDataRepository.
+
+## Pagination
+Put pagination component to the top left of the control right above the grid. The pagination component must have 3 elements: left arrow icon, page number, right arrow icon.
+
+## Data filter
+Add new Filter icon next to pagination. The icon will only be visible if the repository returns Filter capability.
+If Filter capability then when user clicks on Filter icon display a modal form which contains a list of records with 3 elements:
+1. column name 
+2. dropdown with all possible conditions 
+3. textbox where users can enter values.
+The form should have 2 buttons: Clear and Save. 
+When user clicks on Clear button clear all values in textbox elements
+When user clicks on Save button close the modal dialog and populate FilterColumns property in data repository. 
+Refresh the grid on Save.
+Do not use javascript.
+Filter icon should appear as pressed if FilterColumns property is not empty, and unpressed when property is empty.
+
+## Hiding columns
+Add a new property to GridControl: VisibleColumns. On start it should containn all data repository columns.
+Add new Columns icon next to Filter icon. 
+When user clicks on Columns icon display a modal form which contains a list of columns from data repository with checkboxes.
+Checkboxes must be enabled for columns that exits in VisibleColumns property.
+When user clicks on Save button close the modal dialog and populate VisibleColumns property with only checked columns.
+Display only columns which are included in VisibleColumns, hide the rest.
+If VisibleColumns is different from IGridDataRepository.GetColumnNames display Columns icon as pressed.
+Do not allow to save VisibleColumns dialog if all columns are unchecked. There should be at least one column left checked.
+
+## Row selection
+When user clicks on a row in the GridControl change the background to selected and remember which row was selected.
+If grid is refreshed (change page or filter) no rows should be selected.
+
+## Context menu
+IGridDataRepository contains RowActions capability.
+If it's not empty show Context Menu icon next to Columns icon.
+The icon should only be available when a row is selected.
+When row is selected and user clicks on Context Menu icon, display a drop down with items from RowActions list.
+Hide the list if user presses Esc button, new row is selected or user clicks anywhere else on the screen.
+
+### Actions on context menu
+When user selects menu item from the context menu, first call RowActionDetails method and pass menu item name and the current record.
+The method returns list of RowActionField records. 
+Use it to build an editable form and display it in a modal dialog.
+In addtion to form controls, the dialog should contain two buttons: Ok and Cancel.
+If user clicks on Ok button then call InvokeAction and pass the menu item name and RowActionField records, but the values must be read from the form.
+For example, if the action is "Edit", and RowActionDetails returns the following:
+[
+  {
+    "Name": "CountryName",
+    "Value": "USA",
+    "PossibleVales": "",
+    "Visual": "label"
+  },
+  {
+    "Name": "Population",
+    "Value": "300,000,000",
+    "PossibleVales": "",
+    "Visual": "textbox"
+  },
+  {
+    "Name": "States",
+    "Value": "MD",
+    "PossibleVales": [
+      {"id":"MD", "text":"Maryland"},
+      {"id":"VA", "text":"Virginia"}
+    ],
+    "Visual": "textbox"
+  }
+]
+then show a form with title "Edit" and show 3 controls: 
+label: CountryName, label:USA
+label: Population, textbox with prepopulated value of 300,000,000
+label: CountryName, dropdown with 2 items with MD selected
+
+## Using validation for edit forms
+Use types used in class of row parameter in RowActionDetails to avoid entering unallowed data. 
+For example, if row contains field of type int, when user enters alpha values display warning that the data is invalid and disable Ok button.
+Updated instructions:
+Use GetValidator property from repository.
+Use it to validate values before calling RowActionDetails.
+When user enters invalid values display warning that the data is invalid and disable Ok button.
+
+## Grid Actions
+IGridDataRepository contains GridActions capability.
+If it's not empty show buttons placed from right to left starting from the top right of the grid control right above the grid.
+When clicking on the button call GridActionDetails method to show the form.
+When user clicks on Ok button call InvokeAction method.
+Use validator to validate fields before calling InvokeAction.
+
+## Chaging column width
+Add delimiters between column in the table header.
+Allow to change the column width by clicking and dragging column delimiters.
+Remember the changed column widths when switching pages.
+When displaying GridControl for the first time stretch/fit the grid for entire screen.
+
+## Sorting
+Add sorting in GridControl. 
+When user clicks on column header add sorting indication (arrow) from no sort to ascending to descending to no sort.
+If sorting is enabled, set SortColumn property of the repository, if not set SortColumn to null.
+Remember sorting state when switching between pages.
+
+## Page size
+Allow changing page size in GridControl.
+In the bottom left under grid display:
+Show <N> rows,
+where <N> is a dropdown with the following values 10, 20, 50, 100.
+Use the value as a page size when getting data from repositories. 
+Remember settings when switching between pages.
+
+## Skeleton UI
+When loading data for grid display skeleton UI so users can see that data is loading in case if it takes too long.
+
+## Testing GridControl
+Build a new page called GridTest. it should have two elements: Header and GridControl.
+Populate GridControl with data from WeatherDataRepository.
+
+Build a new page called TBGridTest. it should have two elements: Header and GridControl.
+Populate GridControl with data from TBBurdenDataRepository.
+Set VisibleColumns in GridControl in TBGridTest page to only "CountryName", "Iso3Code", "Region","Year","Population"

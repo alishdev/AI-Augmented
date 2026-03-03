@@ -1,0 +1,689 @@
+@typeparam TItem where TItem : class
+@using System.Reflection
+@using FluentValidation
+
+<div class="grid-control" @onkeydown="HandleKeyDown" tabindex="0">
+    <div class="grid-toolbar">
+        <div class="grid-toolbar-left">
+            <button class="grid-icon-btn" @onclick="PreviousPage" disabled="@(currentPage <= 1)" title="Previous page">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+            </button>
+            <span class="grid-page-number">@currentPage</span>
+            <button class="grid-icon-btn" @onclick="NextPage" disabled="@(!hasNextPage)" title="Next page">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+            </button>
+
+            @if (Repository.Capabilities.Filter.Count > 0)
+            {
+                <button class="grid-icon-btn @(IsFilterActive ? "pressed" : "")" @onclick="OpenFilterModal" title="Filter">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>
+                </button>
+            }
+
+            <button class="grid-icon-btn @(IsColumnsModified ? "pressed" : "")" @onclick="OpenColumnsModal" title="Columns">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z"/></svg>
+            </button>
+
+            @if (Repository.Capabilities.RowActions.Count > 0)
+            {
+                <div class="context-menu-wrapper">
+                    <button class="grid-icon-btn" @onclick="ToggleContextMenu" @onclick:stopPropagation="true"
+                            disabled="@(selectedRowIndex < 0)" title="Row Actions">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                            <circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/>
+                        </svg>
+                    </button>
+                    @if (showContextMenu)
+                    {
+                        <div class="context-menu-dropdown">
+                            @foreach (var action in Repository.Capabilities.RowActions)
+                            {
+                                <button class="context-menu-item"
+                                        @onclick="() => HandleRowAction(action)"
+                                        @onclick:stopPropagation="true">@action</button>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+        <div class="grid-toolbar-right">
+            @foreach (var action in Repository.Capabilities.GridActions)
+            {
+                <button class="grid-action-btn" @onclick="() => HandleGridAction(action)">@action</button>
+            }
+        </div>
+    </div>
+
+    <div class="grid-table-wrapper">
+        <table class="grid-table">
+            <colgroup>
+                @foreach (var col in _visibleColumns)
+                {
+                    <col style="width: @GetColumnWidthStyle(col)"/>
+                }
+            </colgroup>
+            <thead>
+                <tr>
+                    @for (var i = 0; i < _visibleColumns.Count; i++)
+                    {
+                        var colIndex = i;
+                        var col = _visibleColumns[i];
+                        <th>
+                            <div class="th-content" @onclick="() => ToggleSort(col)">
+                                <span class="th-text">@col</span>
+                                @if (sortColumn == col && sortDirection != null)
+                                {
+                                    <span class="sort-indicator">@(sortDirection == "asc" ? "▲" : "▼")</span>
+                                }
+                            </div>
+                            @if (colIndex < _visibleColumns.Count - 1)
+                            {
+                                <div class="column-delimiter"
+                                     @onpointerdown="(e) => StartColumnResize(e, colIndex)"
+                                     @onpointerdown:stopPropagation="true"
+                                     @onclick:stopPropagation="true"></div>
+                            }
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (isLoading)
+                {
+                    @for (var r = 0; r < pageSize; r++)
+                    {
+                        <tr class="skeleton-row">
+                            @foreach (var _ in _visibleColumns)
+                            {
+                                <td><div class="skeleton-cell"></div></td>
+                            }
+                        </tr>
+                    }
+                }
+                else if (data.Count == 0)
+                {
+                    <tr>
+                        <td colspan="@_visibleColumns.Count" class="no-data">No data available</td>
+                    </tr>
+                }
+                else
+                {
+                    @for (var i = 0; i < data.Count; i++)
+                    {
+                        var rowIndex = i;
+                        var row = data[i];
+                        <tr class="@(selectedRowIndex == rowIndex ? "selected" : "")"
+                            @onclick="() => SelectRow(rowIndex)">
+                            @foreach (var col in _visibleColumns)
+                            {
+                                <td>@GetCellValue(row, col)</td>
+                            }
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="grid-bottom-bar">
+        <span>Show</span>
+        <select class="page-size-select" @bind="pageSize" @bind:after="OnPageSizeChanged">
+            @foreach (var size in PageSizes)
+            {
+                <option value="@size">@size</option>
+            }
+        </select>
+        <span>rows</span>
+    </div>
+
+    @if (showContextMenu)
+    {
+        <div class="click-away-overlay" @onclick="CloseContextMenu"></div>
+    }
+
+    @if (resizingColumnIndex != null)
+    {
+        <div class="resize-overlay"
+             @onpointermove="HandlePointerMove"
+             @onpointerup="HandlePointerUp"
+             @onpointermove:preventDefault
+             @onpointerup:preventDefault></div>
+    }
+
+    @if (showFilterModal)
+    {
+        <div class="modal-overlay" @onclick="CloseFilterModal">
+            <div class="modal-dialog" @onclick:stopPropagation="true">
+                <h3>Filter</h3>
+                <div class="modal-body">
+                    @foreach (var filter in filterFormItems)
+                    {
+                        var f = filter;
+                        <div class="filter-row">
+                            <span class="filter-column-name">@f.Column</span>
+                            <select class="filter-operator" @bind="f.Operator">
+                                @foreach (var op in FilterOperators)
+                                {
+                                    <option value="@op">@FormatOperator(op)</option>
+                                }
+                            </select>
+                            <input type="text" class="filter-value" @bind="f.Value" @bind:event="oninput"/>
+                        </div>
+                    }
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn-secondary" @onclick="ClearFilters">Clear</button>
+                    <button class="btn-primary" @onclick="SaveFilters">Save</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (showColumnsModal)
+    {
+        <div class="modal-overlay" @onclick="CloseColumnsModal">
+            <div class="modal-dialog" @onclick:stopPropagation="true">
+                <h3>Columns</h3>
+                <div class="modal-body">
+                    @foreach (var col in allColumns)
+                    {
+                        var c = col;
+                        <label class="column-checkbox-label">
+                            <input type="checkbox" checked="@columnsFormChecked[c]"
+                                   @onchange="(e) => columnsFormChecked[c] = (bool)(e.Value ?? false)"/>
+                            <span>@c</span>
+                        </label>
+                    }
+                </div>
+                @if (!columnsFormChecked.Values.Any(v => v))
+                {
+                    <p class="validation-warning">At least one column must be selected.</p>
+                }
+                <div class="modal-buttons">
+                    <button class="btn-secondary" @onclick="CloseColumnsModal">Cancel</button>
+                    <button class="btn-primary" @onclick="SaveColumns"
+                            disabled="@(!columnsFormChecked.Values.Any(v => v))">Save</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (showActionModal)
+    {
+        <div class="modal-overlay" @onclick="CloseActionModal">
+            <div class="modal-dialog modal-dialog-wide" @onclick:stopPropagation="true">
+                <h3>@currentActionName</h3>
+                <div class="modal-body">
+                    @foreach (var field in actionFormFields)
+                    {
+                        var fld = field;
+                        <div class="action-form-row">
+                            <label class="action-form-label">@fld.Name</label>
+                            @if (fld.Visual == "label")
+                            {
+                                <span class="action-form-value">@fld.Value</span>
+                            }
+                            else if (fld.PossibleValues.Count > 0)
+                            {
+                                <select class="action-form-input" @bind="fld.Value" @bind:after="ValidateActionForm">
+                                    @foreach (var opt in fld.PossibleValues)
+                                    {
+                                        <option value="@opt.Id">@opt.Text</option>
+                                    }
+                                </select>
+                            }
+                            else
+                            {
+                                <input type="text" class="action-form-input"
+                                       @bind="fld.Value" @bind:event="oninput" @bind:after="ValidateActionForm"/>
+                            }
+                        </div>
+                    }
+                </div>
+                @if (validationErrors.Count > 0)
+                {
+                    <div class="validation-errors">
+                        @foreach (var error in validationErrors)
+                        {
+                            <p class="validation-error">@error</p>
+                        }
+                    </div>
+                }
+                <div class="modal-buttons">
+                    <button class="btn-secondary" @onclick="CloseActionModal">Cancel</button>
+                    <button class="btn-primary" @onclick="SubmitAction"
+                            disabled="@(validationErrors.Count > 0)">Ok</button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public IGridDataRepository<TItem> Repository { get; set; } = default!;
+
+    [Parameter]
+    public List<string>? VisibleColumns { get; set; }
+
+    private static readonly int[] PageSizes = [10, 20, 50, 100];
+    private static readonly string[] FilterOperators =
+        ["Equal", "NotEqual", "Contains", "GreaterThan", "LessThan", "GreaterThanOrEqual", "LessThanOrEqual"];
+
+    private List<TItem> data = [];
+    private List<string> allColumns = [];
+    private List<string> _visibleColumns = [];
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private bool isLoading = true;
+    private bool hasNextPage;
+    private int selectedRowIndex = -1;
+
+    private string? sortColumn;
+    private string? sortDirection;
+
+    private bool showFilterModal;
+    private List<FilterFormItem> filterFormItems = [];
+
+    private bool showColumnsModal;
+    private Dictionary<string, bool> columnsFormChecked = new();
+
+    private bool showContextMenu;
+
+    private bool showActionModal;
+    private string currentActionName = "";
+    private List<ActionFormField> actionFormFields = [];
+    private List<string> validationErrors = [];
+    private bool isRowAction;
+    private TItem? actionTargetRow;
+
+    private int? resizingColumnIndex;
+    private double resizeStartX;
+    private Dictionary<string, double> columnProportions = new();
+    private double resizeStartProp;
+    private double resizeStartNextProp;
+    private string? resizeCol;
+    private string? resizeNextCol;
+
+    private Dictionary<string, PropertyInfo> propertyMap = new();
+
+    private bool IsFilterActive => Repository.FilterColumns.Count > 0;
+    private bool IsColumnsModified => !_visibleColumns.SequenceEqual(allColumns);
+
+    protected override async Task OnInitializedAsync()
+    {
+        allColumns = Repository.GetColumnNames().ToList();
+        _visibleColumns = VisibleColumns?.Count > 0
+            ? VisibleColumns.Where(c => allColumns.Contains(c)).ToList()
+            : allColumns.ToList();
+
+        propertyMap = typeof(TItem)
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
+
+        InitColumnProportions();
+        await LoadData();
+    }
+
+    private void InitColumnProportions()
+    {
+        columnProportions.Clear();
+        foreach (var col in _visibleColumns)
+            columnProportions[col] = 1.0;
+    }
+
+    private string GetColumnWidthStyle(string col)
+    {
+        var total = _visibleColumns.Sum(c => columnProportions.GetValueOrDefault(c, 1.0));
+        if (total <= 0) total = 1;
+        var pct = columnProportions.GetValueOrDefault(col, 1.0) / total * 100.0;
+        return $"{pct:F2}%";
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        selectedRowIndex = -1;
+        showContextMenu = false;
+        StateHasChanged();
+
+        try
+        {
+            var result = await Repository.GetDataAsync(currentPage, pageSize);
+            data = result;
+            hasNextPage = result.Count >= pageSize;
+        }
+        catch
+        {
+            data = [];
+            hasNextPage = false;
+        }
+
+        isLoading = false;
+    }
+
+    private string GetCellValue(TItem item, string column)
+    {
+        if (propertyMap.TryGetValue(column, out var prop))
+            return prop.GetValue(item)?.ToString() ?? "";
+        return "";
+    }
+
+    private async Task PreviousPage()
+    {
+        if (currentPage <= 1) return;
+        currentPage--;
+        await LoadData();
+    }
+
+    private async Task NextPage()
+    {
+        if (!hasNextPage) return;
+        currentPage++;
+        await LoadData();
+    }
+
+    private async Task OnPageSizeChanged()
+    {
+        currentPage = 1;
+        await LoadData();
+    }
+
+    private void SelectRow(int index)
+    {
+        selectedRowIndex = index;
+        showContextMenu = false;
+    }
+
+    private async Task ToggleSort(string col)
+    {
+        if (sortColumn == col)
+        {
+            sortDirection = sortDirection switch
+            {
+                "asc" => "desc",
+                "desc" => null,
+                _ => "asc"
+            };
+        }
+        else
+        {
+            sortColumn = col;
+            sortDirection = "asc";
+        }
+
+        Repository.SortColumn = sortDirection != null
+            ? new GridSortColumn(sortColumn!, sortDirection)
+            : null;
+        if (sortDirection == null) sortColumn = null;
+
+        await LoadData();
+    }
+
+    private void OpenFilterModal()
+    {
+        filterFormItems = Repository.Capabilities.Filter
+            .Select(col =>
+            {
+                var existing = Repository.FilterColumns.FirstOrDefault(f => f.Column == col);
+                return new FilterFormItem
+                {
+                    Column = col,
+                    Operator = existing?.Operator ?? "Equal",
+                    Value = existing?.Value ?? ""
+                };
+            })
+            .ToList();
+        showFilterModal = true;
+    }
+
+    private void CloseFilterModal() => showFilterModal = false;
+
+    private void ClearFilters()
+    {
+        foreach (var item in filterFormItems)
+            item.Value = "";
+    }
+
+    private async Task SaveFilters()
+    {
+        Repository.FilterColumns.Clear();
+        foreach (var item in filterFormItems.Where(f => !string.IsNullOrWhiteSpace(f.Value)))
+            Repository.FilterColumns.Add(new FilterColumn(item.Column, item.Operator, item.Value));
+
+        showFilterModal = false;
+        currentPage = 1;
+        await LoadData();
+    }
+
+    private static string FormatOperator(string op) => op switch
+    {
+        "Equal" => "Equal",
+        "NotEqual" => "Not Equal",
+        "Contains" => "Contains",
+        "GreaterThan" => "Greater Than",
+        "LessThan" => "Less Than",
+        "GreaterThanOrEqual" => ">= (GTE)",
+        "LessThanOrEqual" => "<= (LTE)",
+        _ => op
+    };
+
+    private void OpenColumnsModal()
+    {
+        columnsFormChecked = allColumns.ToDictionary(c => c, c => _visibleColumns.Contains(c));
+        showColumnsModal = true;
+    }
+
+    private void CloseColumnsModal() => showColumnsModal = false;
+
+    private void SaveColumns()
+    {
+        var selected = allColumns.Where(c => columnsFormChecked.GetValueOrDefault(c)).ToList();
+        if (selected.Count == 0) return;
+
+        _visibleColumns = selected;
+        InitColumnProportions();
+        showColumnsModal = false;
+    }
+
+    private void ToggleContextMenu() => showContextMenu = !showContextMenu;
+    private void CloseContextMenu() => showContextMenu = false;
+
+    private void HandleRowAction(string actionName)
+    {
+        showContextMenu = false;
+        if (selectedRowIndex < 0 || selectedRowIndex >= data.Count) return;
+
+        actionTargetRow = data[selectedRowIndex];
+        var fields = Repository.RowActionDetails(actionName, actionTargetRow);
+
+        currentActionName = actionName;
+        actionFormFields = fields.Select(f => new ActionFormField
+        {
+            Name = f.Name, Value = f.Value,
+            PossibleValues = f.PossibleValues, Visual = f.Visual
+        }).ToList();
+        isRowAction = true;
+        validationErrors.Clear();
+        ValidateActionForm();
+        showActionModal = true;
+    }
+
+    private void HandleGridAction(string actionName)
+    {
+        var fields = Repository.GridActionDetails(actionName);
+
+        currentActionName = actionName;
+        actionFormFields = fields.Select(f => new ActionFormField
+        {
+            Name = f.Name, Value = f.Value,
+            PossibleValues = f.PossibleValues, Visual = f.Visual
+        }).ToList();
+        isRowAction = false;
+        actionTargetRow = default;
+        validationErrors.Clear();
+        ValidateActionForm();
+        showActionModal = true;
+    }
+
+    private void ValidateActionForm()
+    {
+        validationErrors.Clear();
+        var typeErrors = new List<string>();
+        TItem? item;
+        try
+        {
+            item = BuildItem(typeErrors);
+        }
+        catch
+        {
+            item = null;
+        }
+
+        if (typeErrors.Count > 0)
+        {
+            validationErrors.AddRange(typeErrors);
+            return;
+        }
+
+        var validator = Repository.GetValidator;
+        if (item != null && validator != null)
+        {
+            var result = validator.Validate(item);
+            if (!result.IsValid)
+                validationErrors.AddRange(result.Errors.Select(e => e.ErrorMessage));
+        }
+    }
+
+    private TItem? BuildItem(List<string>? typeErrors = null)
+    {
+        var item = isRowAction && actionTargetRow != null
+            ? CloneItem(actionTargetRow)
+            : Activator.CreateInstance<TItem>();
+
+        foreach (var field in actionFormFields)
+        {
+            if (field.Visual == "label") continue;
+            if (!propertyMap.TryGetValue(field.Name, out var prop) || !prop.CanWrite) continue;
+
+            try
+            {
+                prop.SetValue(item, ConvertValue(field.Value, prop.PropertyType));
+            }
+            catch
+            {
+                typeErrors?.Add($"Invalid value for '{field.Name}'.");
+            }
+        }
+
+        return typeErrors is { Count: > 0 } ? null : item;
+    }
+
+    private TItem CloneItem(TItem source)
+    {
+        var clone = Activator.CreateInstance<TItem>();
+        foreach (var prop in propertyMap.Values.Where(p => p.CanRead && p.CanWrite))
+            prop.SetValue(clone, prop.GetValue(source));
+        return clone;
+    }
+
+    private static object? ConvertValue(string value, Type targetType)
+    {
+        var underlying = Nullable.GetUnderlyingType(targetType);
+        if (underlying != null)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return null;
+            targetType = underlying;
+        }
+
+        if (targetType == typeof(string)) return value;
+        if (string.IsNullOrWhiteSpace(value))
+            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
+
+        var trimmed = value.Trim();
+        if (targetType == typeof(int)) return int.Parse(trimmed);
+        if (targetType == typeof(long)) return long.Parse(trimmed);
+        if (targetType == typeof(double)) return double.Parse(trimmed);
+        if (targetType == typeof(float)) return float.Parse(trimmed);
+        if (targetType == typeof(decimal)) return decimal.Parse(trimmed);
+        if (targetType == typeof(DateTime)) return DateTime.Parse(trimmed);
+        if (targetType == typeof(bool)) return bool.Parse(trimmed);
+
+        return Convert.ChangeType(trimmed, targetType);
+    }
+
+    private async Task SubmitAction()
+    {
+        if (validationErrors.Count > 0) return;
+
+        try
+        {
+            var item = BuildItem();
+            if (item == null) return;
+
+            await Repository.InvokeAction(currentActionName, item);
+            showActionModal = false;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            validationErrors.Add(ex.Message);
+        }
+    }
+
+    private void CloseActionModal() => showActionModal = false;
+
+    private void StartColumnResize(PointerEventArgs e, int colIndex)
+    {
+        resizingColumnIndex = colIndex;
+        resizeStartX = e.ClientX;
+        resizeCol = _visibleColumns[colIndex];
+        resizeNextCol = _visibleColumns[colIndex + 1];
+        resizeStartProp = columnProportions.GetValueOrDefault(resizeCol, 1.0);
+        resizeStartNextProp = columnProportions.GetValueOrDefault(resizeNextCol, 1.0);
+    }
+
+    private void HandlePointerMove(PointerEventArgs e)
+    {
+        if (resizingColumnIndex == null || resizeCol == null || resizeNextCol == null) return;
+
+        var delta = e.ClientX - resizeStartX;
+        const double scale = 0.005;
+        columnProportions[resizeCol] = Math.Max(0.15, resizeStartProp + delta * scale);
+        columnProportions[resizeNextCol] = Math.Max(0.15, resizeStartNextProp - delta * scale);
+    }
+
+    private void HandlePointerUp(PointerEventArgs e)
+    {
+        resizingColumnIndex = null;
+        resizeCol = null;
+        resizeNextCol = null;
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            showContextMenu = false;
+            showFilterModal = false;
+            showColumnsModal = false;
+            showActionModal = false;
+        }
+    }
+
+    private class FilterFormItem
+    {
+        public string Column { get; set; } = "";
+        public string Operator { get; set; } = "Equal";
+        public string Value { get; set; } = "";
+    }
+
+    private class ActionFormField
+    {
+        public string Name { get; set; } = "";
+        public string Value { get; set; } = "";
+        public IReadOnlyList<(string Id, string Text)> PossibleValues { get; set; } = [];
+        public string Visual { get; set; } = "";
+    }
+}
