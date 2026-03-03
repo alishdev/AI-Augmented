@@ -150,115 +150,118 @@
              @onpointermove:preventDefault
              @onpointerup:preventDefault></div>
     }
+</div>
 
-    @if (showFilterModal)
-    {
-        <div class="modal-overlay" @onclick="CloseFilterModal">
-            <div class="modal-dialog" @onclick:stopPropagation="true">
-                <h3>Filter</h3>
-                <div class="modal-body">
-                    @foreach (var filter in filterFormItems)
-                    {
-                        var f = filter;
-                        <div class="filter-row">
-                            <span class="filter-column-name">@f.Column</span>
-                            <select class="filter-operator" @bind="f.Operator">
-                                @foreach (var op in FilterOperators)
+@if (showFilterModal)
+{
+    <div class="modal-backdrop" @onclick="CloseFilterModal"></div>
+    <div class="modal-container" @onkeydown="HandleKeyDown">
+        <div class="modal-dialog">
+            <h3>Filter</h3>
+            <div class="modal-body">
+                @foreach (var filter in filterFormItems)
+                {
+                    var f = filter;
+                    <div class="filter-row">
+                        <span class="filter-column-name">@f.Column</span>
+                        <select class="filter-operator" @bind="f.Operator">
+                            @foreach (var op in FilterOperators)
+                            {
+                                <option value="@op">@FormatOperator(op)</option>
+                            }
+                        </select>
+                        <input type="text" class="filter-value" @bind="f.Value" @bind:event="oninput"/>
+                    </div>
+                }
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-secondary" @onclick="ClearFilters">Clear</button>
+                <button class="btn-primary" @onclick="SaveFilters">Save</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showColumnsModal)
+{
+    <div class="modal-backdrop" @onclick="CloseColumnsModal"></div>
+    <div class="modal-container" @onkeydown="HandleKeyDown">
+        <div class="modal-dialog">
+            <h3>Columns</h3>
+            <div class="modal-body">
+                @foreach (var col in allColumns)
+                {
+                    var c = col;
+                    <label class="column-checkbox-label">
+                        <input type="checkbox" checked="@columnsFormChecked[c]"
+                               @onchange="(e) => columnsFormChecked[c] = (bool)(e.Value ?? false)"/>
+                        <span>@c</span>
+                    </label>
+                }
+            </div>
+            @if (!columnsFormChecked.Values.Any(v => v))
+            {
+                <p class="validation-warning">At least one column must be selected.</p>
+            }
+            <div class="modal-buttons">
+                <button class="btn-secondary" @onclick="CloseColumnsModal">Cancel</button>
+                <button class="btn-primary" @onclick="SaveColumns"
+                        disabled="@(!columnsFormChecked.Values.Any(v => v))">Save</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showActionModal)
+{
+    <div class="modal-backdrop" @onclick="CloseActionModal"></div>
+    <div class="modal-container" @onkeydown="HandleKeyDown">
+        <div class="modal-dialog modal-dialog-wide">
+            <h3>@currentActionName</h3>
+            <div class="modal-body">
+                @foreach (var field in actionFormFields)
+                {
+                    var fld = field;
+                    <div class="action-form-row">
+                        <label class="action-form-label">@fld.Name</label>
+                        @if (fld.Visual == "label")
+                        {
+                            <span class="action-form-value">@fld.Value</span>
+                        }
+                        else if (fld.PossibleValues.Count > 0)
+                        {
+                            <select class="action-form-input" @bind="fld.Value" @bind:after="ValidateActionForm">
+                                @foreach (var opt in fld.PossibleValues)
                                 {
-                                    <option value="@op">@FormatOperator(op)</option>
+                                    <option value="@opt.Id">@opt.Text</option>
                                 }
                             </select>
-                            <input type="text" class="filter-value" @bind="f.Value" @bind:event="oninput"/>
-                        </div>
-                    }
-                </div>
-                <div class="modal-buttons">
-                    <button class="btn-secondary" @onclick="ClearFilters">Clear</button>
-                    <button class="btn-primary" @onclick="SaveFilters">Save</button>
-                </div>
-            </div>
-        </div>
-    }
-
-    @if (showColumnsModal)
-    {
-        <div class="modal-overlay" @onclick="CloseColumnsModal">
-            <div class="modal-dialog" @onclick:stopPropagation="true">
-                <h3>Columns</h3>
-                <div class="modal-body">
-                    @foreach (var col in allColumns)
-                    {
-                        var c = col;
-                        <label class="column-checkbox-label">
-                            <input type="checkbox" checked="@columnsFormChecked[c]"
-                                   @onchange="(e) => columnsFormChecked[c] = (bool)(e.Value ?? false)"/>
-                            <span>@c</span>
-                        </label>
-                    }
-                </div>
-                @if (!columnsFormChecked.Values.Any(v => v))
-                {
-                    <p class="validation-warning">At least one column must be selected.</p>
-                }
-                <div class="modal-buttons">
-                    <button class="btn-secondary" @onclick="CloseColumnsModal">Cancel</button>
-                    <button class="btn-primary" @onclick="SaveColumns"
-                            disabled="@(!columnsFormChecked.Values.Any(v => v))">Save</button>
-                </div>
-            </div>
-        </div>
-    }
-
-    @if (showActionModal)
-    {
-        <div class="modal-overlay" @onclick="CloseActionModal">
-            <div class="modal-dialog modal-dialog-wide" @onclick:stopPropagation="true">
-                <h3>@currentActionName</h3>
-                <div class="modal-body">
-                    @foreach (var field in actionFormFields)
-                    {
-                        var fld = field;
-                        <div class="action-form-row">
-                            <label class="action-form-label">@fld.Name</label>
-                            @if (fld.Visual == "label")
-                            {
-                                <span class="action-form-value">@fld.Value</span>
-                            }
-                            else if (fld.PossibleValues.Count > 0)
-                            {
-                                <select class="action-form-input" @bind="fld.Value" @bind:after="ValidateActionForm">
-                                    @foreach (var opt in fld.PossibleValues)
-                                    {
-                                        <option value="@opt.Id">@opt.Text</option>
-                                    }
-                                </select>
-                            }
-                            else
-                            {
-                                <input type="text" class="action-form-input"
-                                       @bind="fld.Value" @bind:event="oninput" @bind:after="ValidateActionForm"/>
-                            }
-                        </div>
-                    }
-                </div>
-                @if (validationErrors.Count > 0)
-                {
-                    <div class="validation-errors">
-                        @foreach (var error in validationErrors)
+                        }
+                        else
                         {
-                            <p class="validation-error">@error</p>
+                            <input type="text" class="action-form-input"
+                                   @bind="fld.Value" @bind:event="oninput" @bind:after="ValidateActionForm"/>
                         }
                     </div>
                 }
-                <div class="modal-buttons">
-                    <button class="btn-secondary" @onclick="CloseActionModal">Cancel</button>
-                    <button class="btn-primary" @onclick="SubmitAction"
-                            disabled="@(validationErrors.Count > 0)">Ok</button>
+            </div>
+            @if (validationErrors.Count > 0)
+            {
+                <div class="validation-errors">
+                    @foreach (var error in validationErrors)
+                    {
+                        <p class="validation-error">@error</p>
+                    }
                 </div>
+            }
+            <div class="modal-buttons">
+                <button class="btn-secondary" @onclick="CloseActionModal">Cancel</button>
+                <button class="btn-primary" @onclick="SubmitAction"
+                        disabled="@(validationErrors.Count > 0)">Ok</button>
             </div>
         </div>
-    }
-</div>
+    </div>
+}
 
 @code {
     [Parameter, EditorRequired]

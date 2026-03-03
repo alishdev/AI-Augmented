@@ -127,3 +127,9 @@ Populate GridControl with data from WeatherDataRepository.
 Build a new page called TBGridTest. it should have two elements: Header and GridControl.
 Populate GridControl with data from TBBurdenDataRepository.
 Set VisibleColumns in GridControl in TBGridTest page to only "CountryName", "Iso3Code", "Region","Year","Population"
+
+
+## Post run instructions:
+1. when I click on any form it immediately closes. 
+for example, when I click anywhere on filter form instead of allowing me to enter data the form closes on click
+2. the dialog still closes on click, but now it looks as if it's behind other component. see screenshot
