@@ -63,6 +63,8 @@ public class TBBurdenDataRepository : IGridDataRepository<TBBurdenData>
 
     public IList<FilterColumn> FilterColumns => _filterColumns;
 
+    public GridSortColumn? SortColumn { get; set; }
+
     public IValidator<TBBurdenData>? GetValidator => Validator;
 
     private static readonly (string Id, string Text)[] RegionOptions =
@@ -161,6 +163,14 @@ public class TBBurdenDataRepository : IGridDataRepository<TBBurdenData>
         var source = _data.Value;
         if (_filterColumns.Count > 0)
             source = ApplyFilters(source, _filterColumns).ToList();
+
+        if (SortColumn is { } sort && PropertyMap.TryGetValue(sort.Column, out var sortProp))
+        {
+            var desc = string.Equals(sort.Direction, "desc", StringComparison.OrdinalIgnoreCase);
+            source = desc
+                ? source.OrderByDescending(r => sortProp.GetValue(r)).ToList()
+                : source.OrderBy(r => sortProp.GetValue(r)).ToList();
+        }
 
         var skip = (page - 1) * pageSize;
         if (skip >= source.Count)
