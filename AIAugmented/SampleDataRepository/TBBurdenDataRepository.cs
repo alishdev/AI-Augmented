@@ -68,6 +68,14 @@ public class TBBurdenDataRepository : IGridDataRepository<TBBurdenData>
 
     public IReadOnlyList<RowActionField> RowActionDetails(string actionName, TBBurdenData row)
     {
+        if (actionName == "Delete")
+        {
+            return
+            [
+                new RowActionField("Delete this record?", "", [], "label")
+            ];
+        }
+            
         return
         [
             new RowActionField(nameof(TBBurdenData.CountryName), row.CountryName, [], "label"),
@@ -84,7 +92,28 @@ public class TBBurdenDataRepository : IGridDataRepository<TBBurdenData>
         ];
     }
 
-    public Task InvokeAction(string actionName, TBBurdenData row) => Task.CompletedTask;
+    public Task InvokeAction(string actionName, TBBurdenData row)
+    {
+        var list = _data.Value;
+        var index = list.FindIndex(r =>
+            r.CountryName == row.CountryName &&
+            r.Iso3Code == row.Iso3Code &&
+            r.Year == row.Year);
+
+        if (index < 0)
+            return Task.CompletedTask;
+
+        if (string.Equals(actionName, "Delete", StringComparison.OrdinalIgnoreCase))
+        {
+            list.RemoveAt(index);
+        }
+        else if (string.Equals(actionName, "Edit", StringComparison.OrdinalIgnoreCase))
+        {
+            list[index] = row;
+        }
+
+        return Task.CompletedTask;
+    }
 
     public async Task<List<TBBurdenData>> GetDataAsync(int page, int pageSize, int delayMS = 0)
     {
