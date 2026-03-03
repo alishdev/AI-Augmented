@@ -423,6 +423,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-wrap: wrap;
 }
 
 .grid-action-label {
@@ -446,6 +447,17 @@
     font-size: 0.88rem;
     color: #333;
     box-sizing: border-box;
+}
+
+.grid-action-input-error {
+    border-color: #e74c3c !important;
+}
+
+.grid-action-error {
+    width: 100%;
+    font-size: 0.78rem;
+    color: #e74c3c;
+    padding-left: 142px;
 }
 
 .grid-action-select {

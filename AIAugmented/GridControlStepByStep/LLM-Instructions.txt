@@ -104,3 +104,11 @@ then show a form with title "Edit" and show 3 controls:
 label: CountryName, label:USA
 label: Population, textbox with prepopulated value of 300,000,000
 label: CountryName, dropdown with 2 items with MD selected
+
+# Step 10. Using validation for edit forms
+Use types used in class of row parameter in RowActionDetails to avoid entering unallowed data. 
+For example, if row contains field of type int, when user enters alpha values display warning that the data is invalid and disable Ok button.
+Updated instructions:
+Use GetValidator property from repository.
+Use it to validate values before calling RowActionDetails.
+When user enters invalid values display warning that the data is invalid and disable Ok button.

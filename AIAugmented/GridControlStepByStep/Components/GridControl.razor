@@ -1,5 +1,6 @@
 @using SampleDataRepository
 @using System.Reflection
+@using FluentValidation
 
 <div class="grid-control" @onkeydown="OnKeyDown" tabindex="0">
     @if (_isLoading && _data is null)
@@ -222,9 +223,14 @@
                                 }
                                 else
                                 {
-                                    <input class="grid-action-input" type="text"
+                                    <input class="grid-action-input @(field.Error is not null ? "grid-action-input-error" : "")"
+                                           type="text"
                                            value="@field.Value"
                                            @onchange="(e) => OnActionFieldChanged(e, index)" />
+                                }
+                                @if (field.Error is not null)
+                                {
+                                    <span class="grid-action-error">@field.Error</span>
                                 }
                             </div>
                         }
@@ -232,7 +238,9 @@
                 </div>
                 <div class="grid-modal-footer">
                     <button class="grid-modal-btn grid-modal-btn-clear" @onclick="CloseActionModal">Cancel</button>
-                    <button class="grid-modal-btn grid-modal-btn-save" @onclick="SubmitActionAsync">Ok</button>
+                    <button class="grid-modal-btn grid-modal-btn-save"
+                            disabled="@HasActionErrors"
+                            @onclick="SubmitActionAsync">Ok</button>
                 </div>
             </div>
         </div>
@@ -280,6 +288,8 @@
         public string Value { get; set; } = string.Empty;
         public IReadOnlyList<(string Id, string Text)> PossibleValues { get; set; } = [];
         public string Visual { get; set; } = "textbox";
+        public Type? PropertyType { get; set; }
+        public string? Error { get; set; }
     }
 
     private class FilterRowModel
@@ -365,12 +375,20 @@
         if (_selectedRow is null) return;
 
         var details = DataRepository.RowActionDetails(action, _selectedRow);
-        _actionFields = details.Select(f => new ActionFieldModel
+        _actionFields = details.Select(f =>
         {
-            Name = f.Name,
-            Value = f.Value,
-            PossibleValues = f.PossibleValues,
-            Visual = f.Visual
+            Type? propType = null;
+            if (_propertyCache is not null && _propertyCache.TryGetValue(f.Name, out var prop))
+                propType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+
+            return new ActionFieldModel
+            {
+                Name = f.Name,
+                Value = f.Value,
+                PossibleValues = f.PossibleValues,
+                Visual = f.Visual,
+                PropertyType = propType
+            };
         }).ToArray();
 
         _actionName = action;
@@ -381,8 +399,95 @@
 
     private void OnActionFieldChanged(ChangeEventArgs e, int index)
     {
-        _actionFields![index].Value = e.Value?.ToString() ?? string.Empty;
+        var field = _actionFields![index];
+        field.Value = e.Value?.ToString() ?? string.Empty;
+        RunValidation();
     }
+
+    private void RunValidation()
+    {
+        if (_actionFields is null) return;
+
+        foreach (var field in _actionFields)
+            field.Error = ValidateFieldType(field);
+
+        if (_actionFields.Any(f => f.Error is not null))
+            return;
+
+        var validator = DataRepository.GetValidator;
+        if (validator is null || _selectedRow is null || _propertyCache is null)
+            return;
+
+        var temp = Activator.CreateInstance<T>();
+        foreach (var prop in _propertyCache.Values)
+        {
+            var original = prop.GetValue(_selectedRow);
+            prop.SetValue(temp, original);
+        }
+
+        foreach (var field in _actionFields)
+        {
+            if (field.Visual == "label") continue;
+            if (!_propertyCache.TryGetValue(field.Name, out var prop)) continue;
+            try
+            {
+                var targetType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+                if (string.IsNullOrWhiteSpace(field.Value) && Nullable.GetUnderlyingType(prop.PropertyType) is not null)
+                    prop.SetValue(temp, null);
+                else
+                {
+                    var converted = Convert.ChangeType(field.Value, targetType,
+                        System.Globalization.CultureInfo.InvariantCulture);
+                    prop.SetValue(temp, converted);
+                }
+            }
+            catch { }
+        }
+
+        var result = validator.Validate(temp);
+        if (!result.IsValid)
+        {
+            foreach (var err in result.Errors)
+            {
+                var match = _actionFields.FirstOrDefault(f => f.Name == err.PropertyName);
+                if (match is not null && match.Visual != "label")
+                    match.Error = err.ErrorMessage;
+            }
+        }
+    }
+
+    private static string? ValidateFieldType(ActionFieldModel field)
+    {
+        if (field.Visual == "label" || field.PossibleValues.Count > 0 || field.PropertyType is null)
+            return null;
+
+        var val = field.Value;
+        if (string.IsNullOrWhiteSpace(val))
+            return null;
+
+        var type = field.PropertyType;
+        if (type == typeof(int) && !int.TryParse(val, System.Globalization.NumberStyles.Integer,
+                System.Globalization.CultureInfo.InvariantCulture, out _))
+            return "Must be a whole number";
+        if (type == typeof(long) && !long.TryParse(val, System.Globalization.NumberStyles.Integer,
+                System.Globalization.CultureInfo.InvariantCulture, out _))
+            return "Must be a whole number";
+        if (type == typeof(double) && !double.TryParse(val, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out _))
+            return "Must be a number";
+        if (type == typeof(decimal) && !decimal.TryParse(val, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out _))
+            return "Must be a number";
+        if (type == typeof(DateTime) && !DateTime.TryParse(val,
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out _))
+            return "Must be a valid date";
+
+        return null;
+    }
+
+    private bool HasActionErrors =>
+        _actionFields?.Any(f => f.Error is not null) == true;
 
     private async Task SubmitActionAsync()
     {
