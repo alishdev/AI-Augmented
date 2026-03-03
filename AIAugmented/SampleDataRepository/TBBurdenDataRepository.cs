@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Reflection;
 using System.Text;
+using FluentValidation;
 
 namespace SampleDataRepository;
 
@@ -46,6 +47,7 @@ public class TBBurdenDataRepository : IGridDataRepository<TBBurdenData>
     );
 
     private readonly List<FilterColumn> _filterColumns = [];
+    private static readonly TBBurdenDataValidator Validator = new();
     private static readonly Dictionary<string, PropertyInfo> PropertyMap = typeof(TBBurdenData)
         .GetProperties(BindingFlags.Public | BindingFlags.Instance)
         .ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
@@ -60,6 +62,8 @@ public class TBBurdenDataRepository : IGridDataRepository<TBBurdenData>
     public GridCapabilities Capabilities => TbCapabilities;
 
     public IList<FilterColumn> FilterColumns => _filterColumns;
+
+    public IValidator<TBBurdenData>? GetValidator => Validator;
 
     private static readonly (string Id, string Text)[] RegionOptions =
     [

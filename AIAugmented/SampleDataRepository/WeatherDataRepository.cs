@@ -1,3 +1,5 @@
+using FluentValidation;
+
 namespace SampleDataRepository;
 
 /// <summary>
@@ -44,6 +46,10 @@ public interface IGridDataRepository<T> where T : class
     /// Invokes the row action (e.g. Edit, Delete). Parameters match RowActionDetails for consistency.
     /// </summary>
     Task InvokeAction(string actionName, T row);
+    /// <summary>
+    /// Returns the validator for the entity type, or null if no validation is configured.
+    /// </summary>
+    IValidator<T>? GetValidator { get; }
     Task<List<T>> GetDataAsync(int page, int pageSize, int delayMS = 0);
 }
 
@@ -80,6 +86,8 @@ public class WeatherDataRepository : IGridDataRepository<WeatherData>
     public GridCapabilities Capabilities => WeatherCapabilities;
 
     public IList<FilterColumn> FilterColumns => _filterColumns;
+
+    public IValidator<WeatherData>? GetValidator => null;
 
     public IReadOnlyList<RowActionField> RowActionDetails(string actionName, WeatherData row)
     {
