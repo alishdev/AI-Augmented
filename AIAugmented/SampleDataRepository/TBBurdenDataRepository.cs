@@ -96,9 +96,38 @@ public class TBBurdenDataRepository : IGridDataRepository<TBBurdenData>
         ];
     }
 
+    public IReadOnlyList<RowActionField> GridActionDetails(string actionName)
+    {
+        if (string.Equals(actionName, "Add", StringComparison.OrdinalIgnoreCase))
+        {
+            return
+            [
+                new RowActionField(nameof(TBBurdenData.CountryName), "", [], "textbox"),
+                new RowActionField(nameof(TBBurdenData.Iso3Code), "", [], "textbox"),
+                new RowActionField(nameof(TBBurdenData.IsoNumericCode), "0", [], "textbox"),
+                new RowActionField(nameof(TBBurdenData.Region), "", RegionOptions, "dropdown"),
+                new RowActionField(nameof(TBBurdenData.Year), DateTime.Now.Year.ToString(), [], "textbox"),
+                new RowActionField(nameof(TBBurdenData.Population), "0", [], "textbox"),
+                new RowActionField(nameof(TBBurdenData.PrevalencePer100k), "0", [], "textbox"),
+                new RowActionField(nameof(TBBurdenData.PrevalencePer100kLow), "0", [], "textbox"),
+                new RowActionField(nameof(TBBurdenData.MortalityEstimateMethod), "", [], "textbox"),
+                new RowActionField(nameof(TBBurdenData.HivInIncidentTbPercent), "", [], "textbox"),
+                new RowActionField(nameof(TBBurdenData.CaseDetectionRatePercent), "", [], "textbox"),
+            ];
+        }
+        return [];
+    }
+
     public Task InvokeAction(string actionName, TBBurdenData row)
     {
         var list = _data.Value;
+
+        if (string.Equals(actionName, "Add", StringComparison.OrdinalIgnoreCase))
+        {
+            list.Add(row);
+            return Task.CompletedTask;
+        }
+
         var index = list.FindIndex(r =>
             r.CountryName == row.CountryName &&
             r.Iso3Code == row.Iso3Code &&

@@ -43,6 +43,10 @@ public interface IGridDataRepository<T> where T : class
     /// </summary>
     IReadOnlyList<RowActionField> RowActionDetails(string actionName, T row);
     /// <summary>
+    /// Returns form field definitions for grid-level actions (e.g. Add). No row context.
+    /// </summary>
+    IReadOnlyList<RowActionField> GridActionDetails(string actionName);
+    /// <summary>
     /// Invokes the row action (e.g. Edit, Delete). Parameters match RowActionDetails for consistency.
     /// </summary>
     Task InvokeAction(string actionName, T row);
@@ -98,6 +102,21 @@ public class WeatherDataRepository : IGridDataRepository<WeatherData>
             new RowActionField(nameof(WeatherData.Temperature), row.Temperature.ToString(), [], "textbox"),
             new RowActionField(nameof(WeatherData.Summary), row.Summary, summaryOptions, "dropdown"),
         ];
+    }
+
+    public IReadOnlyList<RowActionField> GridActionDetails(string actionName)
+    {
+        if (string.Equals(actionName, "Add", StringComparison.OrdinalIgnoreCase))
+        {
+            var summaryOptions = SummaryChoices.Select(s => (Id: s, Text: s)).ToList();
+            return
+            [
+                new RowActionField(nameof(WeatherData.Date), DateTime.Now.ToString("yyyy-MM-dd"), [], "textbox"),
+                new RowActionField(nameof(WeatherData.Temperature), "", [], "textbox"),
+                new RowActionField(nameof(WeatherData.Summary), "", summaryOptions, "dropdown"),
+            ];
+        }
+        return [];
     }
 
     public Task InvokeAction(string actionName, WeatherData row) => Task.CompletedTask;
