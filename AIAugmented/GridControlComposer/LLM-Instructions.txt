@@ -134,3 +134,5 @@ Set VisibleColumns in GridControl in TBGridTest page to only "CountryName", "Iso
 3. still the same behavior
 4. Column resizing is not working: first, the delimiter is not above the line that separates columns (see screenshot); 
 second, while I can grab the delimiter and it changes the icon it still does not move when I drag it.
+5. VisibleColumns state is not saved when switching pages
+6. Still not working. I unchecked one column from VisibleColumns in GridTest page, switch to another page and back and GridTest display all columns again

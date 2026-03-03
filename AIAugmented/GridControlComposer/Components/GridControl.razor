@@ -3,6 +3,8 @@
 @using System.Reflection
 @using FluentValidation
 @using SampleDataRepository
+@using GridControlComposer.Services
+@inject GridStateService GridState
 
 <div class="grid-control-root">
 <div class="grid-control">
@@ -266,16 +268,22 @@
     private List<string> VisibleColumnsList => _visibleColumns.Count > 0 ? _visibleColumns : AllColumns;
     private bool HasCustomVisibleColumns => _visibleColumns.Count > 0 && !_visibleColumns.SequenceEqual(AllColumns);
 
+    private string _stateKey => typeof(T).Name;
+
     protected override void OnInitialized()
     {
-        _visibleColumns = (VisibleColumns != null && VisibleColumns.Count > 0) ? new List<string>(VisibleColumns) : AllColumns.ToList();
-        _ = LoadDataAsync();
-    }
-
-    protected override void OnParametersSet()
-    {
-        if (VisibleColumns != null && VisibleColumns.Count > 0 && !_visibleColumns.SequenceEqual(VisibleColumns))
+        var allCols = AllColumns;
+        var saved = GridState.GetVisibleColumns(_stateKey);
+        if (saved != null && saved.Count > 0)
+        {
+            _visibleColumns = saved.Where(c => allCols.Contains(c)).ToList();
+            if (_visibleColumns.Count == 0) _visibleColumns = allCols.ToList();
+        }
+        else if (VisibleColumns != null && VisibleColumns.Count > 0)
             _visibleColumns = new List<string>(VisibleColumns);
+        else
+            _visibleColumns = allCols.ToList();
+        _ = LoadDataAsync();
     }
 
     private async Task LoadDataAsync()
@@ -350,6 +358,7 @@
     {
         if (ColumnsModalChecked.Count == 0) return;
         _visibleColumns = ColumnsModalChecked.ToList();
+        GridState.SetVisibleColumns(_stateKey, _visibleColumns);
         CloseColumnsModal();
         StateHasChanged();
     }
