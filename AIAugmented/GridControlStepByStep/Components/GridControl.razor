@@ -1,7 +1,7 @@
 @using SampleDataRepository
 @using System.Reflection
 
-<div class="grid-control">
+<div class="grid-control" @onkeydown="OnKeyDown" tabindex="0">
     @if (_isLoading && _data is null)
     {
         <div class="grid-loading">
@@ -39,6 +39,33 @@
                     <rect x="14" y="3" width="7" height="18" rx="1" />
                 </svg>
             </button>
+
+            @if (_rowActions is { Count: > 0 })
+            {
+                <div class="grid-context-menu-wrapper">
+                    <button class="grid-toolbar-icon"
+                            disabled="@(_selectedRow is null)"
+                            @onclick="ToggleContextMenu"
+                            @onclick:stopPropagation="true"
+                            aria-label="Context menu">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="5" r="1" />
+                            <circle cx="12" cy="12" r="1" />
+                            <circle cx="12" cy="19" r="1" />
+                        </svg>
+                    </button>
+                    @if (_showContextMenu)
+                    {
+                        <div class="grid-context-backdrop" @onclick="CloseContextMenu"></div>
+                        <div class="grid-context-dropdown">
+                            @foreach (var action in _rowActions)
+                            {
+                                <button class="grid-context-item" @onclick="() => OnContextAction(action)">@action</button>
+                            }
+                        </div>
+                    }
+                </div>
+            }
         </div>
 
         <div class="grid-table-wrapper">
@@ -64,7 +91,7 @@
                         {
                             <tr @key="row"
                                 class="@(ReferenceEquals(row, _selectedRow) ? "grid-row-selected" : "")"
-                                @onclick="() => _selectedRow = row">
+                                @onclick="() => SelectRow(row)">
                                 @foreach (var col in VisibleColumns)
                                 {
                                     <td data-label="@col">@GetCellValue(row, col)</td>
@@ -174,6 +201,7 @@
 
     private IReadOnlyList<string>? _columns;
     private IReadOnlyList<string>? _filterableColumns;
+    private IReadOnlyList<string>? _rowActions;
     private List<T>? _data;
     private Dictionary<string, PropertyInfo>? _propertyCache;
     private int _currentPage = 1;
@@ -190,6 +218,8 @@
 
     private bool _showColumnsModal;
     private ColumnCheckbox[]? _columnCheckboxes;
+
+    private bool _showContextMenu;
 
     private class FilterRowModel
     {
@@ -208,6 +238,7 @@
     {
         _columns = DataRepository.GetColumnNames();
         _filterableColumns = DataRepository.Capabilities.Filter;
+        _rowActions = DataRepository.Capabilities.RowActions;
         VisibleColumns = new List<string>(_columns);
         _propertyCache = typeof(T)
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
@@ -221,6 +252,7 @@
     {
         _isLoading = true;
         _selectedRow = null;
+        _showContextMenu = false;
         StateHasChanged();
 
         var results = await DataRepository.GetDataAsync(_currentPage, PageSize);
@@ -243,6 +275,32 @@
             _currentPage--;
             await LoadPageAsync();
         }
+    }
+
+    private void SelectRow(T row)
+    {
+        _selectedRow = row;
+        _showContextMenu = false;
+    }
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            _showContextMenu = false;
+            _selectedRow = null;
+        }
+    }
+
+    // --- Context menu ---
+
+    private void ToggleContextMenu() => _showContextMenu = !_showContextMenu;
+
+    private void CloseContextMenu() => _showContextMenu = false;
+
+    private void OnContextAction(string action)
+    {
+        _showContextMenu = false;
     }
 
     // --- Filter modal ---

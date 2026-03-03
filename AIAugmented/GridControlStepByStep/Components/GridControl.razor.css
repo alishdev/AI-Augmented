@@ -175,6 +175,64 @@
     border-color: #1a1a2e;
 }
 
+.grid-toolbar-icon:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.grid-toolbar-icon:disabled:hover {
+    background: #fff;
+    color: #1a1a2e;
+    border-color: #ccc;
+}
+
+/* Context menu */
+.grid-context-menu-wrapper {
+    position: relative;
+    display: inline-flex;
+}
+
+.grid-context-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+}
+
+.grid-context-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    min-width: 140px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.grid-context-item {
+    display: block;
+    width: 100%;
+    padding: 9px 16px;
+    border: none;
+    background: transparent;
+    text-align: left;
+    font-size: 0.88rem;
+    color: #333;
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+
+.grid-context-item:hover {
+    background: #f0f4ff;
+}
+
+.grid-context-item + .grid-context-item {
+    border-top: 1px solid #f0f0f0;
+}
+
 /* Modal backdrop */
 .grid-modal-backdrop {
     position: fixed;

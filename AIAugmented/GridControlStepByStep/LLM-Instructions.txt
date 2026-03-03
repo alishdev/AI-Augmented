@@ -62,3 +62,11 @@ I can not click on Save button when no columns selected, which is correct. But t
 # Step 7. Row selection
 When user clicks on a row in the GridControl change the background to selected and remember which row was selected.
 If grid is refreshed (change page or filter) no rows should be selected.
+
+# Step 8. Context menu
+IGridDataRepository contains RowActions capability.
+If it's not empty show Context Menu icon next to Columns icon.
+The icon should only be available when a row is selected.
+When row is selected and user clicks on Context Menu icon, display a drop down with items from RowActions list.
+Hide the list if user presses Esc button, new row is selected or user clicks anywhere else on the screen.
+
