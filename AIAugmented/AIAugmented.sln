@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GridControlOneShot", "GridC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleDataRepository", "SampleDataRepository\SampleDataRepository.csproj", "{D50469B6-8BF9-4029-B32C-35F177B57026}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GridControlComposer", "GridControlComposer\GridControlComposer.csproj", "{D98E1227-23A0-45CB-B3FD-B4699A176284}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{D50469B6-8BF9-4029-B32C-35F177B57026}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D50469B6-8BF9-4029-B32C-35F177B57026}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D50469B6-8BF9-4029-B32C-35F177B57026}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D98E1227-23A0-45CB-B3FD-B4699A176284}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D98E1227-23A0-45CB-B3FD-B4699A176284}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D98E1227-23A0-45CB-B3FD-B4699A176284}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D98E1227-23A0-45CB-B3FD-B4699A176284}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
