@@ -81,15 +81,22 @@
                 <table class="grid-table">
                     <thead>
                         <tr>
-                            @foreach (var col in VisibleColumnsList)
-                            {
-                                <th style="@GetColumnWidthStyle(col)" class="sortable">
-                                    <span class="th-content" @onclick="() => CycleSort(col)">
-                                        @col
-                                        <span class="sort-indicator">@GetSortIndicator(col)</span>
-                                    </span>
-                                    <span class="col-resize" @onclick="() => CycleColumnWidth(col)" title="Click to resize">│</span>
-                                </th>
+                            @{
+                                var colIndex = 0;
+                                foreach (var col in VisibleColumnsList)
+                                {
+                                    <th style="@GetColumnWidthStyle(col)" class="sortable">
+                                        @if (colIndex > 0)
+                                        {
+                                            <span class="col-resize" @onclick="() => CycleColumnWidth(col)" title="Click to change width">│</span>
+                                        }
+                                        <span class="th-content" @onclick="() => CycleSort(col)">
+                                            @col
+                                            <span class="sort-indicator">@GetSortIndicator(col)</span>
+                                        </span>
+                                    </th>
+                                    colIndex++;
+                                }
                             }
                         </tr>
                     </thead>
