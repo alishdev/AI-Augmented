@@ -120,3 +120,7 @@ When clicking on the button call GridActionDetails method to show the form.
 When user clicks on Ok button call InvokeAction method.
 Use validator to validate fields before calling InvokeAction.
 
+# Step 12. Allow chaging column width
+Add delimiters between column in the table header.
+Allow to change the column width by clicking and dragging column delimiters.
+Remember the changed column widths when switching pages.

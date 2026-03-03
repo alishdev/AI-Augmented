@@ -1,8 +1,10 @@
 @using SampleDataRepository
 @using System.Reflection
 @using FluentValidation
+@using GridControlStepByStep.Services
+@inject GridStateService GridState
 
-<div class="grid-control" @onkeydown="OnKeyDown" tabindex="0">
+<div class="grid-control @(_isDragging ? "grid-resizing" : "")" @onkeydown="OnKeyDown" tabindex="0">
     @if (_isLoading && _data is null)
     {
         <div class="grid-loading">
@@ -82,12 +84,29 @@
         </div>
 
         <div class="grid-table-wrapper">
-            <table class="grid-table">
+            <table class="grid-table" style="table-layout: fixed; width: @(GetTotalTableWidth())px">
+                <colgroup>
+                    @foreach (var col in VisibleColumns)
+                    {
+                        <col style="width: @(GetColumnWidth(col))px" />
+                    }
+                </colgroup>
                 <thead>
                     <tr>
-                        @foreach (var col in VisibleColumns)
+                        @for (var i = 0; i < VisibleColumns.Count; i++)
                         {
-                            <th>@col</th>
+                            var colIdx = i;
+                            var col = VisibleColumns[colIdx];
+                            <th>
+                                <span class="grid-th-text">@col</span>
+                                @if (colIdx < VisibleColumns.Count - 1)
+                                {
+                                    <div class="grid-col-delimiter"
+                                         @onmousedown="(e) => StartColumnResize(e, colIdx)"
+                                         @onmousedown:preventDefault="true"
+                                         @onmousedown:stopPropagation="true"></div>
+                                }
+                            </th>
                         }
                     </tr>
                 </thead>
@@ -115,6 +134,14 @@
                 </tbody>
             </table>
         </div>
+    }
+
+    @if (_isDragging)
+    {
+        <div class="grid-resize-overlay"
+             @onmousemove="OnResizeMove"
+             @onmouseup="OnResizeEnd"
+             @onmousemove:preventDefault="true"></div>
     }
 
     @if (_showFilterModal && _filterRows is not null)
@@ -291,6 +318,14 @@
 
     private bool _showContextMenu;
 
+    private Dictionary<string, int> _columnWidths = new();
+    private bool _isDragging;
+    private int _dragColumnIndex;
+    private double _dragStartX;
+    private int _dragStartWidth;
+    private const int DefaultColumnWidth = 150;
+    private const int MinColumnWidth = 50;
+
     private bool _showActionModal;
     private string _actionName = string.Empty;
     private ActionFieldModel[]? _actionFields;
@@ -326,6 +361,11 @@
         _rowActions = DataRepository.Capabilities.RowActions;
         _gridActions = DataRepository.Capabilities.GridActions;
         VisibleColumns = new List<string>(_columns);
+        var savedWidths = GridState.GetColumnWidths(typeof(T).FullName ?? typeof(T).Name);
+        foreach (var col in _columns)
+            _columnWidths[col] = savedWidths is not null && savedWidths.TryGetValue(col, out var w)
+                ? w
+                : DefaultColumnWidth;
         _propertyCache = typeof(T)
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => _columns.Contains(p.Name))
@@ -666,5 +706,34 @@
             null => string.Empty,
             _ => value.ToString() ?? string.Empty
         };
+    }
+
+    // --- Column resize ---
+
+    private int GetColumnWidth(string col) =>
+        _columnWidths.TryGetValue(col, out var w) ? w : DefaultColumnWidth;
+
+    private int GetTotalTableWidth() =>
+        VisibleColumns.Sum(c => GetColumnWidth(c));
+
+    private void StartColumnResize(MouseEventArgs e, int colIndex)
+    {
+        _isDragging = true;
+        _dragColumnIndex = colIndex;
+        _dragStartX = e.ClientX;
+        _dragStartWidth = GetColumnWidth(VisibleColumns[colIndex]);
+    }
+
+    private void OnResizeMove(MouseEventArgs e)
+    {
+        if (!_isDragging) return;
+        var newWidth = (int)(_dragStartWidth + (e.ClientX - _dragStartX));
+        _columnWidths[VisibleColumns[_dragColumnIndex]] = Math.Max(MinColumnWidth, newWidth);
+    }
+
+    private void OnResizeEnd(MouseEventArgs e)
+    {
+        _isDragging = false;
+        GridState.SaveColumnWidths(typeof(T).FullName ?? typeof(T).Name, _columnWidths);
     }
 }
