@@ -412,6 +412,52 @@
     cursor: pointer;
 }
 
+/* Row action form inside modal */
+.grid-action-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.grid-action-field {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.grid-action-label {
+    min-width: 130px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #555;
+    flex-shrink: 0;
+}
+
+.grid-action-value-label {
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.grid-action-input {
+    flex: 1;
+    padding: 7px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    color: #333;
+    box-sizing: border-box;
+}
+
+.grid-action-select {
+    flex: 1;
+    padding: 7px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    background: #fff;
+    color: #333;
+}
+
 /* Responsive: stack rows as cards on small screens */
 @media screen and (max-width: 640px) {
     .grid-table thead {

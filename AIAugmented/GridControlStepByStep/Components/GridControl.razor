@@ -188,6 +188,55 @@
             </div>
         </div>
     }
+
+    @if (_showActionModal && _actionFields is not null)
+    {
+        <div class="grid-modal-backdrop" @onclick="CloseActionModal">
+            <div class="grid-modal" @onclick:stopPropagation="true">
+                <div class="grid-modal-header">
+                    <h3>@_actionName</h3>
+                    <button class="grid-modal-close" @onclick="CloseActionModal" aria-label="Close">&times;</button>
+                </div>
+                <div class="grid-modal-body">
+                    <div class="grid-action-form">
+                        @for (var i = 0; i < _actionFields.Length; i++)
+                        {
+                            var index = i;
+                            var field = _actionFields[index];
+                            <div class="grid-action-field">
+                                <label class="grid-action-label">@field.Name</label>
+                                @if (field.Visual == "label")
+                                {
+                                    <span class="grid-action-value-label">@field.Value</span>
+                                }
+                                else if (field.PossibleValues.Count > 0)
+                                {
+                                    <select class="grid-action-select"
+                                            value="@field.Value"
+                                            @onchange="(e) => OnActionFieldChanged(e, index)">
+                                        @foreach (var opt in field.PossibleValues)
+                                        {
+                                            <option value="@opt.Id">@opt.Text</option>
+                                        }
+                                    </select>
+                                }
+                                else
+                                {
+                                    <input class="grid-action-input" type="text"
+                                           value="@field.Value"
+                                           @onchange="(e) => OnActionFieldChanged(e, index)" />
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="grid-modal-footer">
+                    <button class="grid-modal-btn grid-modal-btn-clear" @onclick="CloseActionModal">Cancel</button>
+                    <button class="grid-modal-btn grid-modal-btn-save" @onclick="SubmitActionAsync">Ok</button>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 @typeparam T where T : class
@@ -220,6 +269,18 @@
     private ColumnCheckbox[]? _columnCheckboxes;
 
     private bool _showContextMenu;
+
+    private bool _showActionModal;
+    private string _actionName = string.Empty;
+    private ActionFieldModel[]? _actionFields;
+
+    private class ActionFieldModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
+        public IReadOnlyList<(string Id, string Text)> PossibleValues { get; set; } = [];
+        public string Visual { get; set; } = "textbox";
+    }
 
     private class FilterRowModel
     {
@@ -301,6 +362,50 @@
     private void OnContextAction(string action)
     {
         _showContextMenu = false;
+        if (_selectedRow is null) return;
+
+        var details = DataRepository.RowActionDetails(action, _selectedRow);
+        _actionFields = details.Select(f => new ActionFieldModel
+        {
+            Name = f.Name,
+            Value = f.Value,
+            PossibleValues = f.PossibleValues,
+            Visual = f.Visual
+        }).ToArray();
+
+        _actionName = action;
+        _showActionModal = true;
+    }
+
+    private void CloseActionModal() => _showActionModal = false;
+
+    private void OnActionFieldChanged(ChangeEventArgs e, int index)
+    {
+        _actionFields![index].Value = e.Value?.ToString() ?? string.Empty;
+    }
+
+    private async Task SubmitActionAsync()
+    {
+        if (_selectedRow is null || _actionFields is null) return;
+
+        foreach (var field in _actionFields)
+        {
+            if (field.Visual == "label") continue;
+            if (_propertyCache is not null && _propertyCache.TryGetValue(field.Name, out var prop))
+            {
+                try
+                {
+                    var converted = Convert.ChangeType(field.Value, prop.PropertyType,
+                        System.Globalization.CultureInfo.InvariantCulture);
+                    prop.SetValue(_selectedRow, converted);
+                }
+                catch { }
+            }
+        }
+
+        await DataRepository.InvokeAction(_actionName, _selectedRow);
+        _showActionModal = false;
+        await LoadPageAsync();
     }
 
     // --- Filter modal ---

@@ -70,3 +70,37 @@ The icon should only be available when a row is selected.
 When row is selected and user clicks on Context Menu icon, display a drop down with items from RowActions list.
 Hide the list if user presses Esc button, new row is selected or user clicks anywhere else on the screen.
 
+# Step 9. Actions on context menu
+When user selects menu item from the context menu, first call RowActionDetails method and pass menu item name and the current record.
+The method returns list of RowActionField records. 
+Use it to build an editable form and display it in a modal dialog.
+In addtion to form controls, the dialog should contain two buttons: Ok and Cancel.
+If user clicks on Ok button then call InvokeAction and pass the menu item name and RowActionField records, but the values must be read from the form.
+For example, if the action is "Edit", and RowActionDetails returns the following:
+[
+  {
+    "Name": "CountryName",
+    "Value": "USA",
+    "PossibleVales": "",
+    "Visual": "label"
+  },
+  {
+    "Name": "Population",
+    "Value": "300,000,000",
+    "PossibleVales": "",
+    "Visual": "textbox"
+  },
+  {
+    "Name": "States",
+    "Value": "MD",
+    "PossibleVales": [
+      {"id":"MD", "text":"Maryland"},
+      {"id":"VA", "text":"Virginia"}
+    ],
+    "Visual": "textbox"
+  }
+]
+then show a form with title "Edit" and show 3 controls: 
+label: CountryName, label:USA
+label: Population, textbox with prepopulated value of 300,000,000
+label: CountryName, dropdown with 2 items with MD selected
