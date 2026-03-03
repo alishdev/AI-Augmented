@@ -125,3 +125,11 @@ Add delimiters between column in the table header.
 Allow to change the column width by clicking and dragging column delimiters.
 Remember the changed column widths when switching pages.
 When displaying GridControl for the first time stretch/fit the grid for entire screen.
+
+# Step 13.
+Add sorting in GridControl. 
+When user clicks on column header add sorting indication (arrow) from no sort to ascending to descending to no sort.
+If sorting is enabled, set SortColumn property of the repository, if not set SortColumn to null.
+Remember sorting state when switching between pages.
+
+

@@ -45,10 +45,24 @@
 }
 
 .grid-th-text {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 4px;
     overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.grid-th-sortable {
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.grid-sort-arrow {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    opacity: 0.85;
 }
 
 .grid-table td {

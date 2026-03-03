@@ -101,7 +101,24 @@
                             var colIdx = i;
                             var col = VisibleColumns[colIdx];
                             <th>
-                                <span class="grid-th-text">@col</span>
+                                <span class="grid-th-text grid-th-sortable" @onclick="() => ToggleSortAsync(col)">
+                                    @col
+                                    @if (_sortColumnName == col)
+                                    {
+                                        @if (_sortDirection == "asc")
+                                        {
+                                            <svg class="grid-sort-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="6 15 12 9 18 15" />
+                                            </svg>
+                                        }
+                                        else
+                                        {
+                                            <svg class="grid-sort-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="6 9 12 15 18 9" />
+                                            </svg>
+                                        }
+                                    }
+                                </span>
                                 @if (colIdx < VisibleColumns.Count - 1)
                                 {
                                     <div class="grid-col-delimiter"
@@ -313,6 +330,9 @@
 
     private bool _columnsPressed;
 
+    private string? _sortColumnName;
+    private string? _sortDirection;
+
     private bool _showFilterModal;
     private FilterRowModel[]? _filterRows;
 
@@ -364,12 +384,20 @@
         _rowActions = DataRepository.Capabilities.RowActions;
         _gridActions = DataRepository.Capabilities.GridActions;
         VisibleColumns = new List<string>(_columns);
-        var savedWidths = GridState.GetColumnWidths(typeof(T).FullName ?? typeof(T).Name);
+        var gridId = typeof(T).FullName ?? typeof(T).Name;
+        var savedWidths = GridState.GetColumnWidths(gridId);
         if (savedWidths is not null)
         {
             foreach (var col in _columns)
                 _columnWidths[col] = savedWidths.TryGetValue(col, out var w) ? w : ComputeDefaultColumnWidth();
             _useFixedWidths = true;
+        }
+        var savedSort = GridState.GetSortColumn(gridId);
+        if (savedSort is not null)
+        {
+            _sortColumnName = savedSort.Column;
+            _sortDirection = savedSort.Direction;
+            DataRepository.SortColumn = savedSort;
         }
         _propertyCache = typeof(T)
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
@@ -421,6 +449,37 @@
             _showContextMenu = false;
             _selectedRow = null;
         }
+    }
+
+    // --- Sorting ---
+
+    private async Task ToggleSortAsync(string column)
+    {
+        if (_sortColumnName == column)
+        {
+            _sortDirection = _sortDirection switch
+            {
+                "asc" => "desc",
+                "desc" => null,
+                _ => "asc"
+            };
+            if (_sortDirection is null)
+                _sortColumnName = null;
+        }
+        else
+        {
+            _sortColumnName = column;
+            _sortDirection = "asc";
+        }
+
+        DataRepository.SortColumn = _sortColumnName is not null
+            ? new GridSortColumn(_sortColumnName, _sortDirection!)
+            : null;
+
+        GridState.SaveSortColumn(typeof(T).FullName ?? typeof(T).Name, DataRepository.SortColumn);
+
+        _currentPage = 1;
+        await LoadPageAsync();
     }
 
     // --- Context menu ---
