@@ -132,6 +132,17 @@ public class WeatherDataRepository : IGridDataRepository<WeatherData>
 
     public Task InvokeAction(string actionName, WeatherData row) => Task.CompletedTask;
 
+    private List<WeatherData> _data;
+    public WeatherDataRepository()
+    {
+        _data = Enumerable.Range(1, TotalRecords)
+            .Select(i => new WeatherData {
+                Date = DateTime.Now.AddDays(i),
+                Temperature = Random.Shared.Next(-20, 55),
+                Summary = SummaryChoices[Random.Shared.Next(SummaryChoices.Length)] })
+            .ToList();
+    }
+
     public async Task<List<WeatherData>> GetDataAsync(int page, int pageSize, int delayMS = 0)
     {
         if (page < 1)
@@ -145,12 +156,7 @@ public class WeatherDataRepository : IGridDataRepository<WeatherData>
         if (delayMS > 0)
             await Task.Delay(delayMS);
 
-        var list = Enumerable.Range(1, TotalRecords)
-            .Select(i => new WeatherData {
-                Date = DateTime.Now.AddDays(i),
-                Temperature = Random.Shared.Next(-20, 55),
-                Summary = SummaryChoices[Random.Shared.Next(SummaryChoices.Length)] })
-            .ToList();
+        var list = _data;        
 
         if (SortColumn is { } sort && GetProperty(typeof(WeatherData), sort.Column) is { } prop)
         {
