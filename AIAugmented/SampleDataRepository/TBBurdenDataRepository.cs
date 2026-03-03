@@ -61,6 +61,31 @@ public class TBBurdenDataRepository : IGridDataRepository<TBBurdenData>
 
     public IList<FilterColumn> FilterColumns => _filterColumns;
 
+    private static readonly (string Id, string Text)[] RegionOptions =
+    [
+        ("AFR", "AFR"), ("AMR", "AMR"), ("EMR", "EMR"), ("EUR", "EUR"), ("SEA", "SEA"), ("WPR", "WPR"),
+    ];
+
+    public IReadOnlyList<RowActionField> RowActionDetails(string actionName, TBBurdenData row)
+    {
+        return
+        [
+            new RowActionField(nameof(TBBurdenData.CountryName), row.CountryName, [], "label"),
+            new RowActionField(nameof(TBBurdenData.Iso3Code), row.Iso3Code, [], "label"),
+            new RowActionField(nameof(TBBurdenData.IsoNumericCode), row.IsoNumericCode.ToString(), [], "textbox"),
+            new RowActionField(nameof(TBBurdenData.Region), row.Region, RegionOptions, "dropdown"),
+            new RowActionField(nameof(TBBurdenData.Year), row.Year.ToString(), [], "textbox"),
+            new RowActionField(nameof(TBBurdenData.Population), row.Population.ToString(), [], "textbox"),
+            new RowActionField(nameof(TBBurdenData.PrevalencePer100k), row.PrevalencePer100k.ToString(), [], "textbox"),
+            new RowActionField(nameof(TBBurdenData.PrevalencePer100kLow), row.PrevalencePer100kLow.ToString(), [], "textbox"),
+            new RowActionField(nameof(TBBurdenData.MortalityEstimateMethod), row.MortalityEstimateMethod, [], "textbox"),
+            new RowActionField(nameof(TBBurdenData.HivInIncidentTbPercent), row.HivInIncidentTbPercent?.ToString() ?? "", [], "textbox"),
+            new RowActionField(nameof(TBBurdenData.CaseDetectionRatePercent), row.CaseDetectionRatePercent?.ToString() ?? "", [], "textbox"),
+        ];
+    }
+
+    public Task InvokeAction(string actionName, TBBurdenData row) => Task.CompletedTask;
+
     public async Task<List<TBBurdenData>> GetDataAsync(int page, int pageSize, int delayMS = 0)
     {
         if (page < 1)
