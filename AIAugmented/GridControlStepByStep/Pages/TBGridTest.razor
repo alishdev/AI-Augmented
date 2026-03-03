@@ -7,4 +7,5 @@
 
 <h1>TB Burden by Country</h1>
 
-<GridControl T="TBBurdenData" DataRepository="Repository" />
+<GridControl T="TBBurdenData" DataRepository="Repository"
+             InitialVisibleColumns="@(new[] { "CountryName", "Iso3Code", "Region","Year","Population" })" />

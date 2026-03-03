@@ -333,6 +333,9 @@
     [Parameter]
     public int PageSize { get; set; } = 10;
 
+    [Parameter]
+    public IReadOnlyList<string>? InitialVisibleColumns { get; set; }
+
     private int _pageSize;
     private static readonly int[] PageSizeOptions = [10, 20, 50, 100];
 
@@ -404,7 +407,10 @@
         _filterableColumns = DataRepository.Capabilities.Filter;
         _rowActions = DataRepository.Capabilities.RowActions;
         _gridActions = DataRepository.Capabilities.GridActions;
-        VisibleColumns = new List<string>(_columns);
+        VisibleColumns = InitialVisibleColumns is { Count: > 0 }
+            ? new List<string>(InitialVisibleColumns)
+            : new List<string>(_columns);
+        _columnsPressed = VisibleColumns.Count != _columns.Count;
         var gridId = typeof(T).FullName ?? typeof(T).Name;
         var savedWidths = GridState.GetColumnWidths(gridId);
         if (savedWidths is not null)
