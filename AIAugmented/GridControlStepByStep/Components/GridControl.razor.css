@@ -91,13 +91,45 @@
     }
 }
 
-/* Pagination — top-left, above the grid */
+/* Toolbar bar — contains pagination on left, grid actions on right */
+.grid-toolbar-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0 10px 0;
+}
+
+/* Pagination — left side */
 .grid-pagination {
     display: flex;
     align-items: center;
     justify-content: flex-start;
     gap: 6px;
-    padding: 0 0 10px 0;
+}
+
+/* Grid action buttons — right side, right-to-left ordering */
+.grid-actions-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-direction: row-reverse;
+}
+
+.grid-action-btn-top {
+    padding: 6px 18px;
+    border: 1px solid #1a1a2e;
+    border-radius: 6px;
+    background: #1a1a2e;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.grid-action-btn-top:hover {
+    background: #2d2d4e;
 }
 
 .grid-page-number {

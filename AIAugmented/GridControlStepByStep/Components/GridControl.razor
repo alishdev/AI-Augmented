@@ -12,58 +12,70 @@
     }
     else if (_columns is not null && _data is not null)
     {
-        <div class="grid-pagination">
-            <button class="grid-page-arrow" disabled="@(_currentPage <= 1 || _isLoading)" @onclick="PreviousPageAsync" aria-label="Previous page">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="15 18 9 12 15 6" />
-                </svg>
-            </button>
-            <span class="grid-page-number">@_currentPage</span>
-            <button class="grid-page-arrow" disabled="@(!_hasNextPage || _isLoading)" @onclick="NextPageAsync" aria-label="Next page">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="9 6 15 12 9 18" />
-                </svg>
-            </button>
-
-            @if (_filterableColumns is { Count: > 0 })
-            {
-                <button class="grid-toolbar-icon @(DataRepository.FilterColumns.Count > 0 ? "pressed" : "")" @onclick="OpenFilterModal" aria-label="Filter">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+        <div class="grid-toolbar-bar">
+            <div class="grid-pagination">
+                <button class="grid-page-arrow" disabled="@(_currentPage <= 1 || _isLoading)" @onclick="PreviousPageAsync" aria-label="Previous page">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6" />
                     </svg>
                 </button>
-            }
+                <span class="grid-page-number">@_currentPage</span>
+                <button class="grid-page-arrow" disabled="@(!_hasNextPage || _isLoading)" @onclick="NextPageAsync" aria-label="Next page">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 6 15 12 9 18" />
+                    </svg>
+                </button>
 
-            <button class="grid-toolbar-icon @(_columnsPressed ? "pressed" : "")" @onclick="OpenColumnsModal" aria-label="Columns">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="7" height="18" rx="1" />
-                    <rect x="14" y="3" width="7" height="18" rx="1" />
-                </svg>
-            </button>
-
-            @if (_rowActions is { Count: > 0 })
-            {
-                <div class="grid-context-menu-wrapper">
-                    <button class="grid-toolbar-icon"
-                            disabled="@(_selectedRow is null)"
-                            @onclick="ToggleContextMenu"
-                            @onclick:stopPropagation="true"
-                            aria-label="Context menu">
+                @if (_filterableColumns is { Count: > 0 })
+                {
+                    <button class="grid-toolbar-icon @(DataRepository.FilterColumns.Count > 0 ? "pressed" : "")" @onclick="OpenFilterModal" aria-label="Filter">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="5" r="1" />
-                            <circle cx="12" cy="12" r="1" />
-                            <circle cx="12" cy="19" r="1" />
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
                         </svg>
                     </button>
-                    @if (_showContextMenu)
+                }
+
+                <button class="grid-toolbar-icon @(_columnsPressed ? "pressed" : "")" @onclick="OpenColumnsModal" aria-label="Columns">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="18" rx="1" />
+                        <rect x="14" y="3" width="7" height="18" rx="1" />
+                    </svg>
+                </button>
+
+                @if (_rowActions is { Count: > 0 })
+                {
+                    <div class="grid-context-menu-wrapper">
+                        <button class="grid-toolbar-icon"
+                                disabled="@(_selectedRow is null)"
+                                @onclick="ToggleContextMenu"
+                                @onclick:stopPropagation="true"
+                                aria-label="Context menu">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="5" r="1" />
+                                <circle cx="12" cy="12" r="1" />
+                                <circle cx="12" cy="19" r="1" />
+                            </svg>
+                        </button>
+                        @if (_showContextMenu)
+                        {
+                            <div class="grid-context-backdrop" @onclick="CloseContextMenu"></div>
+                            <div class="grid-context-dropdown">
+                                @foreach (var action in _rowActions)
+                                {
+                                    <button class="grid-context-item" @onclick="() => OnContextAction(action)">@action</button>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            @if (_gridActions is { Count: > 0 })
+            {
+                <div class="grid-actions-right">
+                    @foreach (var action in _gridActions)
                     {
-                        <div class="grid-context-backdrop" @onclick="CloseContextMenu"></div>
-                        <div class="grid-context-dropdown">
-                            @foreach (var action in _rowActions)
-                            {
-                                <button class="grid-context-item" @onclick="() => OnContextAction(action)">@action</button>
-                            }
-                        </div>
+                        <button class="grid-action-btn-top" @onclick="() => OnGridAction(action)">@action</button>
                     }
                 </div>
             }
@@ -259,6 +271,7 @@
     private IReadOnlyList<string>? _columns;
     private IReadOnlyList<string>? _filterableColumns;
     private IReadOnlyList<string>? _rowActions;
+    private IReadOnlyList<string>? _gridActions;
     private List<T>? _data;
     private Dictionary<string, PropertyInfo>? _propertyCache;
     private int _currentPage = 1;
@@ -281,6 +294,7 @@
     private bool _showActionModal;
     private string _actionName = string.Empty;
     private ActionFieldModel[]? _actionFields;
+    private bool _isGridAction;
 
     private class ActionFieldModel
     {
@@ -310,6 +324,7 @@
         _columns = DataRepository.GetColumnNames();
         _filterableColumns = DataRepository.Capabilities.Filter;
         _rowActions = DataRepository.Capabilities.RowActions;
+        _gridActions = DataRepository.Capabilities.GridActions;
         VisibleColumns = new List<string>(_columns);
         _propertyCache = typeof(T)
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
@@ -375,6 +390,17 @@
         if (_selectedRow is null) return;
 
         var details = DataRepository.RowActionDetails(action, _selectedRow);
+        OpenActionForm(action, details, isGridAction: false);
+    }
+
+    private void OnGridAction(string action)
+    {
+        var details = DataRepository.GridActionDetails(action);
+        OpenActionForm(action, details, isGridAction: true);
+    }
+
+    private void OpenActionForm(string action, IReadOnlyList<RowActionField> details, bool isGridAction)
+    {
         _actionFields = details.Select(f =>
         {
             Type? propType = null;
@@ -392,6 +418,7 @@
         }).ToArray();
 
         _actionName = action;
+        _isGridAction = isGridAction;
         _showActionModal = true;
     }
 
@@ -415,14 +442,17 @@
             return;
 
         var validator = DataRepository.GetValidator;
-        if (validator is null || _selectedRow is null || _propertyCache is null)
+        if (validator is null || _propertyCache is null)
             return;
 
         var temp = Activator.CreateInstance<T>();
-        foreach (var prop in _propertyCache.Values)
+        if (!_isGridAction && _selectedRow is not null)
         {
-            var original = prop.GetValue(_selectedRow);
-            prop.SetValue(temp, original);
+            foreach (var prop in _propertyCache.Values)
+            {
+                var original = prop.GetValue(_selectedRow);
+                prop.SetValue(temp, original);
+            }
         }
 
         foreach (var field in _actionFields)
@@ -491,7 +521,18 @@
 
     private async Task SubmitActionAsync()
     {
-        if (_selectedRow is null || _actionFields is null) return;
+        if (_actionFields is null) return;
+
+        T target;
+        if (_isGridAction)
+        {
+            target = Activator.CreateInstance<T>();
+        }
+        else
+        {
+            if (_selectedRow is null) return;
+            target = _selectedRow;
+        }
 
         foreach (var field in _actionFields)
         {
@@ -500,15 +541,21 @@
             {
                 try
                 {
-                    var converted = Convert.ChangeType(field.Value, prop.PropertyType,
-                        System.Globalization.CultureInfo.InvariantCulture);
-                    prop.SetValue(_selectedRow, converted);
+                    var targetType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+                    if (string.IsNullOrWhiteSpace(field.Value) && Nullable.GetUnderlyingType(prop.PropertyType) is not null)
+                        prop.SetValue(target, null);
+                    else
+                    {
+                        var converted = Convert.ChangeType(field.Value, targetType,
+                            System.Globalization.CultureInfo.InvariantCulture);
+                        prop.SetValue(target, converted);
+                    }
                 }
                 catch { }
             }
         }
 
-        await DataRepository.InvokeAction(_actionName, _selectedRow);
+        await DataRepository.InvokeAction(_actionName, target);
         _showActionModal = false;
         await LoadPageAsync();
     }

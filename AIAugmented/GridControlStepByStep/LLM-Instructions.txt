@@ -112,3 +112,11 @@ Updated instructions:
 Use GetValidator property from repository.
 Use it to validate values before calling RowActionDetails.
 When user enters invalid values display warning that the data is invalid and disable Ok button.
+
+# Step 11. Adding GridActions
+IGridDataRepository contains GridActions capability.
+If it's not empty show buttons placed from right to left starting from the top right of the grid control right above the grid.
+When clicking on the button call GridActionDetails method to show the form.
+When user clicks on Ok button call InvokeAction method.
+Use validator to validate fields before calling InvokeAction.
+
