@@ -93,6 +93,30 @@
     background: #c4d8ff;
 }
 
+/* Footer — page size selector below grid */
+.grid-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0 0 0;
+}
+
+.grid-footer-label {
+    font-size: 0.85rem;
+    color: #555;
+    user-select: none;
+}
+
+.grid-footer-select {
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+}
+
 /* Column delimiter / resize handle */
 .grid-col-delimiter {
     position: absolute;

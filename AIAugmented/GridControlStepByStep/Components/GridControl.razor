@@ -154,6 +154,17 @@
                 </tbody>
             </table>
         </div>
+
+        <div class="grid-footer">
+            <span class="grid-footer-label">Show</span>
+            <select class="grid-footer-select" value="@_pageSize" @onchange="OnPageSizeChanged">
+                @foreach (var size in PageSizeOptions)
+                {
+                    <option value="@size">@size</option>
+                }
+            </select>
+            <span class="grid-footer-label">rows</span>
+        </div>
     }
 
     @if (_isDragging)
@@ -315,6 +326,9 @@
     [Parameter]
     public int PageSize { get; set; } = 10;
 
+    private int _pageSize;
+    private static readonly int[] PageSizeOptions = [10, 20, 50, 100];
+
     private IReadOnlyList<string>? _columns;
     private IReadOnlyList<string>? _filterableColumns;
     private IReadOnlyList<string>? _rowActions;
@@ -399,6 +413,7 @@
             _sortDirection = savedSort.Direction;
             DataRepository.SortColumn = savedSort;
         }
+        _pageSize = GridState.GetPageSize(gridId) ?? PageSize;
         _propertyCache = typeof(T)
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => _columns.Contains(p.Name))
@@ -414,9 +429,9 @@
         _showContextMenu = false;
         StateHasChanged();
 
-        var results = await DataRepository.GetDataAsync(_currentPage, PageSize);
+        var results = await DataRepository.GetDataAsync(_currentPage, _pageSize);
         _data = results;
-        _hasNextPage = results.Count == PageSize;
+        _hasNextPage = results.Count == _pageSize;
 
         _isLoading = false;
     }
@@ -432,6 +447,17 @@
         if (_currentPage > 1)
         {
             _currentPage--;
+            await LoadPageAsync();
+        }
+    }
+
+    private async Task OnPageSizeChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var size))
+        {
+            _pageSize = size;
+            _currentPage = 1;
+            GridState.SavePageSize(typeof(T).FullName ?? typeof(T).Name, _pageSize);
             await LoadPageAsync();
         }
     }

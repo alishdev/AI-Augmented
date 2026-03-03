@@ -10,6 +10,7 @@ public class GridStateService
 {
     private readonly Dictionary<string, Dictionary<string, int>> _columnWidths = new();
     private readonly Dictionary<string, GridSortColumn> _sortColumns = new();
+    private readonly Dictionary<string, int> _pageSizes = new();
 
     public Dictionary<string, int>? GetColumnWidths(string gridId) =>
         _columnWidths.TryGetValue(gridId, out var widths) ? widths : null;
@@ -27,4 +28,10 @@ public class GridStateService
         else
             _sortColumns.Remove(gridId);
     }
+
+    public int? GetPageSize(string gridId) =>
+        _pageSizes.TryGetValue(gridId, out var size) ? size : null;
+
+    public void SavePageSize(string gridId, int size) =>
+        _pageSizes[gridId] = size;
 }
