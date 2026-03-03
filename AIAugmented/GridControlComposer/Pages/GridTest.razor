@@ -1,0 +1,12 @@
+@page "/grid-test"
+@using SampleDataRepository
+
+<PageTitle>Grid Test</PageTitle>
+
+<h1>Grid Test</h1>
+
+<GridControl T="WeatherData" Repository="@_repository" />
+
+@code {
+    private readonly WeatherDataRepository _repository = new();
+}

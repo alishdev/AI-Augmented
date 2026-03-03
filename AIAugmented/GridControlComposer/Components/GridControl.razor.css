@@ -1,0 +1,391 @@
+/* GridControl - Responsive, no JavaScript */
+
+.grid-control-root {
+    position: relative;
+    width: 100%;
+}
+
+.grid-control {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 300px;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.grid-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.toolbar-left {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.toolbar-right {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.pagination-btn {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #ced4da;
+    background: #fff;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: #e9ecef;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-arrow {
+    font-size: 0.75rem;
+}
+
+.page-number {
+    padding: 0 0.5rem;
+    font-size: 0.9rem;
+}
+
+.toolbar-icon {
+    padding: 0.35rem 0.5rem;
+    border: 1px solid #ced4da;
+    background: #fff;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.toolbar-icon:hover {
+    background: #e9ecef;
+}
+
+.toolbar-icon.pressed {
+    background: #0d6efd;
+    color: #fff;
+    border-color: #0d6efd;
+}
+
+.grid-action-btn {
+    padding: 0.35rem 0.75rem;
+    border: 1px solid #0d6efd;
+    background: #0d6efd;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.grid-action-btn:hover {
+    background: #0b5ed7;
+}
+
+.grid-container {
+    flex: 1;
+    overflow: auto;
+    min-height: 200px;
+}
+
+.grid-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.grid-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.grid-table th,
+.grid-table td {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #dee2e6;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.grid-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.grid-table th.sortable .th-content {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.grid-table th.sortable .th-content:hover {
+    color: #0d6efd;
+}
+
+.sort-indicator {
+    font-size: 0.7rem;
+}
+
+.col-resize {
+    cursor: col-resize;
+    padding: 0 0.25rem;
+    color: #adb5bd;
+    user-select: none;
+}
+
+.col-resize:hover {
+    color: #495057;
+}
+
+.grid-table tbody tr {
+    cursor: pointer;
+}
+
+.grid-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.grid-table tbody tr.selected {
+    background: #cfe2ff;
+}
+
+.grid-footer {
+    padding: 0.5rem 0;
+    border-top: 1px solid #dee2e6;
+}
+
+.page-size select {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+/* Context menu */
+.toolbar-left {
+    position: relative;
+}
+
+.context-menu-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+}
+
+.context-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 0.25rem;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    min-width: 120px;
+}
+
+.context-menu-item {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+}
+
+.context-menu-item:hover {
+    background: #f8f9fa;
+}
+
+/* Modals - use ::deep so styles apply to descendants of scoped root */
+::deep .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+}
+
+::deep .modal {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: auto;
+}
+
+::deep .modal-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+    font-weight: 600;
+}
+
+::deep .modal-body {
+    padding: 1.5rem;
+}
+
+::deep .modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+::deep .modal-footer button {
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+::deep .modal-footer button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Filter form */
+::deep .filter-row {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr 2fr;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    align-items: center;
+}
+
+::deep .filter-row label {
+    font-weight: 500;
+}
+
+::deep .filter-row input,
+::deep .filter-row select {
+    padding: 0.35rem 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+/* Columns form */
+::deep .columns-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+::deep .columns-row input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Action form */
+::deep .action-field {
+    margin-bottom: 1rem;
+}
+
+::deep .action-field label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+::deep .action-field input,
+::deep .action-field select {
+    width: 100%;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+::deep .validation-error {
+    color: #dc3545;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+}
+
+/* Skeleton UI */
+.skeleton-grid {
+    padding: 0.5rem;
+}
+
+.skeleton-header {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.skeleton-header-cell {
+    height: 2rem;
+}
+
+.skeleton-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.skeleton-cell {
+    height: 1.5rem;
+    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite;
+    border-radius: 4px;
+}
+
+.skeleton-header-cell {
+    flex: 1;
+    min-width: 80px;
+}
+
+.skeleton-row .skeleton-cell {
+    flex: 1;
+    min-width: 80px;
+}
+
+@keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    ::deep .filter-row {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    ::deep .filter-row label {
+        grid-column: 1 / -1;
+    }
+
+    .grid-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+        justify-content: flex-start;
+    }
+}

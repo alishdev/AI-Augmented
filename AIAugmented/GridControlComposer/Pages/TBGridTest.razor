@@ -1,0 +1,20 @@
+@page "/tb-grid-test"
+@using SampleDataRepository
+
+<PageTitle>TB Grid Test</PageTitle>
+
+<h1>TB Grid Test</h1>
+
+<GridControl T="TBBurdenData" Repository="@_repository" VisibleColumns="@_visibleColumns" />
+
+@code {
+    private readonly TBBurdenDataRepository _repository = new();
+    private readonly List<string> _visibleColumns =
+    [
+        "CountryName",
+        "Iso3Code",
+        "Region",
+        "Year",
+        "Population"
+    ];
+}
