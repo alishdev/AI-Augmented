@@ -130,3 +130,5 @@ Set VisibleColumns in GridControl in TBGridTest page to only "CountryName", "Iso
 
 # Post run instructions
 1. Whenever I click on a button which supposed to open modal dialog nothing is happening. No dialogs displayed.
+2. nothing has changed visually. instead of opening dialog the screen becomes dark as if it is behind some other screen.
+3. still the same behavior

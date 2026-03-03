@@ -218,18 +218,29 @@
     background: #f8f9fa;
 }
 
-/* Modals - use ::deep so styles apply to descendants of scoped root */
-::deep .modal-overlay {
+/* Modals - use grid- prefix to avoid Bootstrap .modal conflict (Bootstrap hides .modal by default) */
+::deep .grid-modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: rgba(0,0,0,0.5);
     z-index: 99999;
 }
 
-::deep .modal {
+::deep .grid-modal-dialog {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100000;
+    pointer-events: none;
+}
+
+::deep .grid-modal-dialog .grid-modal-box {
+    pointer-events: auto;
+}
+
+::deep .grid-modal-box {
     background: #fff;
     border-radius: 8px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.2);
@@ -238,17 +249,17 @@
     overflow: auto;
 }
 
-::deep .modal-header {
+::deep .grid-modal-header {
     padding: 1rem 1.5rem;
     border-bottom: 1px solid #dee2e6;
     font-weight: 600;
 }
 
-::deep .modal-body {
+::deep .grid-modal-body {
     padding: 1.5rem;
 }
 
-::deep .modal-footer {
+::deep .grid-modal-footer {
     padding: 1rem 1.5rem;
     border-top: 1px solid #dee2e6;
     display: flex;
@@ -256,13 +267,13 @@
     justify-content: flex-end;
 }
 
-::deep .modal-footer button {
+::deep .grid-modal-footer button {
     padding: 0.35rem 0.75rem;
     border-radius: 4px;
     cursor: pointer;
 }
 
-::deep .modal-footer button:disabled {
+::deep .grid-modal-footer button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }

@@ -127,10 +127,11 @@
 @* Filter Modal *@
 @if (ShowFilterModal)
 {
-    <div class="modal-overlay" @onclick="CloseFilterModal">
-        <div class="modal" @onclick:stopPropagation="true">
-            <div class="modal-header">Filter</div>
-            <div class="modal-body">
+    <div class="grid-modal-overlay" @onclick="CloseFilterModal"></div>
+    <div class="grid-modal-dialog" @onclick:stopPropagation="true">
+        <div class="grid-modal-box">
+            <div class="grid-modal-header">Filter</div>
+            <div class="grid-modal-body">
                 @foreach (var fc in FilterFormRows)
                 {
                     <div class="filter-row">
@@ -148,7 +149,7 @@
                     </div>
                 }
             </div>
-            <div class="modal-footer">
+            <div class="grid-modal-footer">
                 <button type="button" @onclick="ClearFilter">Clear</button>
                 <button type="button" @onclick="SaveFilter">Save</button>
             </div>
@@ -159,10 +160,11 @@
 @* Columns Modal *@
 @if (ShowColumnsModal)
 {
-    <div class="modal-overlay" @onclick="CloseColumnsModal">
-        <div class="modal" @onclick:stopPropagation="true">
-            <div class="modal-header">Visible Columns</div>
-            <div class="modal-body">
+    <div class="grid-modal-overlay" @onclick="CloseColumnsModal"></div>
+    <div class="grid-modal-dialog" @onclick:stopPropagation="true">
+        <div class="grid-modal-box">
+            <div class="grid-modal-header">Visible Columns</div>
+            <div class="grid-modal-body">
                 @foreach (var col in AllColumns)
                 {
                     <div class="columns-row">
@@ -171,7 +173,7 @@
                     </div>
                 }
             </div>
-            <div class="modal-footer">
+            <div class="grid-modal-footer">
                 <button type="button" @onclick="SaveColumns" disabled="@(ColumnsModalChecked.Count == 0)">Save</button>
             </div>
         </div>
@@ -181,10 +183,11 @@
 @* Action Modal (Row/Grid action form) *@
 @if (ShowActionModal)
 {
-    <div class="modal-overlay" @onclick="CloseActionModal">
-        <div class="modal" @onclick:stopPropagation="true">
-            <div class="modal-header">@ActionModalTitle</div>
-            <div class="modal-body">
+    <div class="grid-modal-overlay" @onclick="CloseActionModal"></div>
+    <div class="grid-modal-dialog" @onclick:stopPropagation="true">
+        <div class="grid-modal-box">
+            <div class="grid-modal-header">@ActionModalTitle</div>
+            <div class="grid-modal-body">
                 @foreach (var field in ActionFormFields)
                 {
                     <div class="action-field">
@@ -217,7 +220,7 @@
                     <div class="validation-error">@ActionValidationError</div>
                 }
             </div>
-            <div class="modal-footer">
+            <div class="grid-modal-footer">
                 <button type="button" @onclick="CloseActionModal">Cancel</button>
                 <button type="button" @onclick="SubmitAction" disabled="@(ActionValidationError != null)">Ok</button>
             </div>
