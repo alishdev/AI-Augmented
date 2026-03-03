@@ -124,3 +124,4 @@ Use validator to validate fields before calling InvokeAction.
 Add delimiters between column in the table header.
 Allow to change the column width by clicking and dragging column delimiters.
 Remember the changed column widths when switching pages.
+When displaying GridControl for the first time stretch/fit the grid for entire screen.

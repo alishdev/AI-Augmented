@@ -84,13 +84,16 @@
         </div>
 
         <div class="grid-table-wrapper">
-            <table class="grid-table" style="table-layout: fixed; width: @(GetTotalTableWidth())px">
-                <colgroup>
-                    @foreach (var col in VisibleColumns)
-                    {
-                        <col style="width: @(GetColumnWidth(col))px" />
-                    }
-                </colgroup>
+            <table class="grid-table grid-table-fixed" style="@(_useFixedWidths ? $"width: {GetTotalTableWidth()}px" : "")">
+                @if (_useFixedWidths)
+                {
+                    <colgroup>
+                        @foreach (var col in VisibleColumns)
+                        {
+                            <col style="width: @(GetColumnWidth(col))px" />
+                        }
+                    </colgroup>
+                }
                 <thead>
                     <tr>
                         @for (var i = 0; i < VisibleColumns.Count; i++)
@@ -319,11 +322,11 @@
     private bool _showContextMenu;
 
     private Dictionary<string, int> _columnWidths = new();
+    private bool _useFixedWidths;
     private bool _isDragging;
     private int _dragColumnIndex;
     private double _dragStartX;
     private int _dragStartWidth;
-    private const int DefaultColumnWidth = 150;
     private const int MinColumnWidth = 50;
 
     private bool _showActionModal;
@@ -362,10 +365,12 @@
         _gridActions = DataRepository.Capabilities.GridActions;
         VisibleColumns = new List<string>(_columns);
         var savedWidths = GridState.GetColumnWidths(typeof(T).FullName ?? typeof(T).Name);
-        foreach (var col in _columns)
-            _columnWidths[col] = savedWidths is not null && savedWidths.TryGetValue(col, out var w)
-                ? w
-                : DefaultColumnWidth;
+        if (savedWidths is not null)
+        {
+            foreach (var col in _columns)
+                _columnWidths[col] = savedWidths.TryGetValue(col, out var w) ? w : ComputeDefaultColumnWidth();
+            _useFixedWidths = true;
+        }
         _propertyCache = typeof(T)
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => _columns.Contains(p.Name))
@@ -710,14 +715,25 @@
 
     // --- Column resize ---
 
+    private int ComputeDefaultColumnWidth() =>
+        Math.Clamp(1200 / Math.Max(1, VisibleColumns.Count), MinColumnWidth, 400);
+
     private int GetColumnWidth(string col) =>
-        _columnWidths.TryGetValue(col, out var w) ? w : DefaultColumnWidth;
+        _columnWidths.TryGetValue(col, out var w) ? w : ComputeDefaultColumnWidth();
 
     private int GetTotalTableWidth() =>
         VisibleColumns.Sum(c => GetColumnWidth(c));
 
     private void StartColumnResize(MouseEventArgs e, int colIndex)
     {
+        if (!_useFixedWidths)
+        {
+            var defaultWidth = ComputeDefaultColumnWidth();
+            foreach (var col in _columns!)
+                _columnWidths[col] = defaultWidth;
+            _useFixedWidths = true;
+        }
+
         _isDragging = true;
         _dragColumnIndex = colIndex;
         _dragStartX = e.ClientX;

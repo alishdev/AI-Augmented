@@ -23,6 +23,10 @@
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
+.grid-table.grid-table-fixed {
+    table-layout: fixed;
+}
+
 .grid-table thead tr {
     background: #1a1a2e;
     color: #fff;
