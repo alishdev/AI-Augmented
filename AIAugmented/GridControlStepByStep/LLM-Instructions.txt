@@ -139,3 +139,6 @@ Show <N> rows,
 where <N> is a dropdown with the following values 10, 20, 50, 100.
 Use the value as a page size when getting data from repositories. 
 Remember settings when switching between pages.
+
+# Step 15. 
+When loading data for grid display skeleton UI so users can see that data is loading in case if it takes too long.

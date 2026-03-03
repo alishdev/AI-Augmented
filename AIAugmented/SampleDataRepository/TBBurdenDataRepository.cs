@@ -150,15 +150,14 @@ public class TBBurdenDataRepository : IGridDataRepository<TBBurdenData>
         return Task.CompletedTask;
     }
 
-    public async Task<List<TBBurdenData>> GetDataAsync(int page, int pageSize, int delayMS = 0)
+    public async Task<List<TBBurdenData>> GetDataAsync(int page, int pageSize)
     {
         if (page < 1)
             throw new ArgumentException("Page must be greater than 0");
         if (pageSize < 1)
             throw new ArgumentException("Page size must be greater than 0");
 
-        if (delayMS > 0)
-            await Task.Delay(delayMS);
+        await Task.Delay(1000);
 
         var source = _data.Value;
         if (_filterColumns.Count > 0)

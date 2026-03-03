@@ -63,7 +63,7 @@ public interface IGridDataRepository<T> where T : class
     /// Returns the validator for the entity type, or null if no validation is configured.
     /// </summary>
     IValidator<T>? GetValidator { get; }
-    Task<List<T>> GetDataAsync(int page, int pageSize, int delayMS = 0);
+    Task<List<T>> GetDataAsync(int page, int pageSize);
 }
 
 public class WeatherDataRepository : IGridDataRepository<WeatherData>
@@ -143,7 +143,7 @@ public class WeatherDataRepository : IGridDataRepository<WeatherData>
             .ToList();
     }
 
-    public async Task<List<WeatherData>> GetDataAsync(int page, int pageSize, int delayMS = 0)
+    public async Task<List<WeatherData>> GetDataAsync(int page, int pageSize)
     {
         if (page < 1)
             throw new ArgumentException("Page must be greater than 0");
@@ -153,8 +153,7 @@ public class WeatherDataRepository : IGridDataRepository<WeatherData>
         if ((page-1) * pageSize > TotalRecords)
             return new List<WeatherData>();
         
-        if (delayMS > 0)
-            await Task.Delay(delayMS);
+        await Task.Delay(1000);
 
         var list = _data;        
 

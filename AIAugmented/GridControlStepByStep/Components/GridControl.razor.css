@@ -160,30 +160,22 @@
     font-style: italic;
 }
 
-/* Loading */
-.grid-loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 48px 16px;
-    color: #555;
-    font-size: 1rem;
+/* Skeleton loading rows */
+.grid-skeleton-row {
+    pointer-events: none;
 }
 
-.grid-spinner {
-    width: 20px;
-    height: 20px;
-    border: 3px solid #ddd;
-    border-top-color: #1a1a2e;
-    border-radius: 50%;
-    animation: grid-spin 0.7s linear infinite;
+.grid-skeleton-cell {
+    height: 14px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #eaeaea 25%, #ddd 50%, #eaeaea 75%);
+    background-size: 200% 100%;
+    animation: grid-skeleton-shimmer 1.5s ease-in-out infinite;
 }
 
-@keyframes grid-spin {
-    to {
-        transform: rotate(360deg);
-    }
+@keyframes grid-skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
 /* Toolbar bar — contains pagination on left, grid actions on right */

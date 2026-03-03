@@ -5,14 +5,7 @@
 @inject GridStateService GridState
 
 <div class="grid-control @(_isDragging ? "grid-resizing" : "")" @onkeydown="OnKeyDown" tabindex="0">
-    @if (_isLoading && _data is null)
-    {
-        <div class="grid-loading">
-            <span class="grid-spinner"></span>
-            <span>Loading&hellip;</span>
-        </div>
-    }
-    else if (_columns is not null && _data is not null)
+    @if (_columns is not null)
     {
         <div class="grid-toolbar-bar">
             <div class="grid-pagination">
@@ -131,7 +124,21 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (_data.Count == 0)
+                    @if (_isLoading)
+                    {
+                        @for (var s = 0; s < _pageSize; s++)
+                        {
+                            <tr class="grid-skeleton-row">
+                                @foreach (var col in VisibleColumns)
+                                {
+                                    <td>
+                                        <div class="grid-skeleton-cell" style="width: @(50 + (s + col.Length) % 4 * 12)%"></div>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    }
+                    else if (_data is null || _data.Count == 0)
                     {
                         <tr>
                             <td colspan="@VisibleColumns.Count" class="grid-empty">No data available.</td>
